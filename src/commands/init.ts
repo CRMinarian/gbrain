@@ -92,6 +92,7 @@ export async function runInit(args: string[]) {
   } else {
     console.log(`\nBrain ready. ${stats.page_count} pages.`);
     console.log('Next: gbrain import <dir> to migrate your markdown.');
+    console.log('Production agent guide: docs/GBRAIN_SKILLPACK.md');
   }
 }
 

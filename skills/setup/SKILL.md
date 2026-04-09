@@ -171,7 +171,25 @@ Embeddings can be refreshed later in batch (`gbrain embed --stale`).
 Both should be checked. gbrain for facts about the world. memory_search for how
 the agent should behave.
 
-## Phase E: Health Check
+## Phase E: Load the Production Agent Guide
+
+Read `docs/GBRAIN_SKILLPACK.md`. This is the reference architecture for how a
+production agent uses gbrain: the brain-agent loop, entity detection, enrichment
+pipeline, meeting ingestion, cron schedules, and the five operational disciplines.
+
+Inject the key patterns into the agent's system context or AGENTS.md:
+
+1. **Brain-agent loop** (Section 2): read before responding, write after learning
+2. **Entity detection** (Section 3): spawn on every message, capture people/companies/ideas
+3. **Source attribution** (Section 7): every fact needs `[Source: ...]`
+4. **Iron law back-linking** (Section 15.4): every mention links back to the entity page
+
+Tell the user: "The production agent guide is at docs/GBRAIN_SKILLPACK.md. It covers
+the brain-agent loop, entity detection, enrichment, meeting ingestion, and cron
+schedules. Read it when you're ready to go from 'search works' to 'the brain
+maintains itself.'"
+
+## Phase F: Health Check
 
 Run `gbrain doctor --json` and report the results. Every check should be OK.
 If any check fails, the doctor output tells you exactly what's wrong and how to fix it.
