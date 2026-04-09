@@ -4,23 +4,24 @@ GBrain is a personal knowledge brain. Postgres + pgvector + hybrid search in a m
 
 ## Architecture
 
-Thin CLI + fat skills. The CLI (`src/cli.ts`) dispatches commands to handler files in
-`src/commands/`. The core library (`src/core/`) handles database, search, embeddings,
-and markdown parsing. Skills (`skills/`) are fat markdown files that tell you HOW to
-use the tools — ingest meetings, answer queries, maintain the brain, enrich from APIs.
+Contract-first: `src/core/operations.ts` defines ~30 shared operations. CLI and MCP
+server are both generated from this single source. Skills are fat markdown files
+(tool-agnostic, work with both CLI and plugin contexts).
 
 ## Key files
 
+- `src/core/operations.ts` — Contract-first operation definitions (the foundation)
 - `src/core/engine.ts` — Pluggable engine interface (BrainEngine)
 - `src/core/postgres-engine.ts` — Postgres + pgvector implementation
 - `src/core/db.ts` — Connection management, schema initialization
-- `src/core/import-file.ts` — Shared single-file import (used by import + sync)
+- `src/core/import-file.ts` — importFromFile + importFromContent (chunk + embed + tags)
 - `src/core/sync.ts` — Pure sync functions (manifest parsing, filtering, slug conversion)
 - `src/core/chunkers/` — 3-tier chunking (recursive, semantic, LLM-guided)
 - `src/core/search/` — Hybrid search: vector + keyword + RRF + multi-query expansion + dedup
 - `src/core/embedding.ts` — OpenAI text-embedding-3-large, batch, retry, backoff
-- `src/mcp/server.ts` — MCP stdio server exposing all tools
+- `src/mcp/server.ts` — MCP stdio server (generated from operations)
 - `src/schema.sql` — Full Postgres + pgvector DDL (includes files table)
+- `openclaw.plugin.json` — ClawHub bundle plugin manifest
 
 ## Commands
 
@@ -28,17 +29,27 @@ Run `gbrain --help` or `gbrain --tools-json` for full command reference.
 
 ## Testing
 
-`bun test` runs all tests (39 tests across 3 files). Tests: `test/markdown.test.ts`
-(frontmatter parsing, round-trip serialization), `test/chunkers/recursive.test.ts`
-(delimiter splitting, overlap, chunk sizing), `test/sync.test.ts` (manifest parsing,
-isSyncable filtering, pathToSlug conversion).
+`bun test` runs all tests (9 unit test files + 3 E2E test files). Unit tests run
+without a database. E2E tests skip gracefully when `DATABASE_URL` is not set.
+
+Unit tests: `test/markdown.test.ts` (frontmatter parsing), `test/chunkers/recursive.test.ts`
+(chunking), `test/sync.test.ts` (sync logic), `test/parity.test.ts` (operations contract
+parity), `test/cli.test.ts` (CLI structure), `test/config.test.ts` (config redaction),
+`test/files.test.ts` (MIME/hash), `test/import-file.test.ts` (import pipeline),
+`test/upgrade.test.ts` (schema migrations).
+
+E2E tests (`test/e2e/`): Run against real Postgres+pgvector. Require `DATABASE_URL`.
+- `bun run test:e2e` runs Tier 1 (mechanical, all operations, no API keys)
+- Tier 2 (`skills.test.ts`) requires OpenClaw + API keys, runs nightly in CI
+- Local setup: `docker compose -f docker-compose.test.yml up -d` then
+  `DATABASE_URL=postgresql://postgres:postgres@localhost:5434/gbrain_test bun run test:e2e`
 
 ## Skills
 
 Read the skill files in `skills/` before doing brain operations. They contain the
 workflows, heuristics, and quality rules for ingestion, querying, maintenance,
-enrichment, and installation. 7 skills: ingest, query, maintain, enrich, briefing,
-migrate, install.
+enrichment, and setup. 8 skills: ingest, query, maintain, enrich, briefing,
+migrate, setup, install.
 
 ## Build
 

@@ -46,7 +46,7 @@ export class PostgresEngine implements BrainEngine {
   async putPage(slug: string, page: PageInput): Promise<Page> {
     validateSlug(slug);
     const sql = db.getConnection();
-    const hash = contentHash(page.compiled_truth, page.timeline || '');
+    const hash = page.content_hash || contentHash(page.compiled_truth, page.timeline || '');
     const frontmatter = page.frontmatter || {};
 
     const rows = await sql`
@@ -285,11 +285,11 @@ export class PostgresEngine implements BrainEngine {
       )
       SELECT DISTINCT g.slug, g.title, g.type, g.depth,
         coalesce(
-          (SELECT json_agg(json_build_object('to_slug', p3.slug, 'link_type', l2.link_type))
+          (SELECT jsonb_agg(jsonb_build_object('to_slug', p3.slug, 'link_type', l2.link_type))
            FROM links l2
            JOIN pages p3 ON p3.id = l2.to_page_id
            WHERE l2.from_page_id = g.id),
-          '[]'::json
+          '[]'::jsonb
         ) as links
       FROM graph g
       ORDER BY g.depth, g.slug
