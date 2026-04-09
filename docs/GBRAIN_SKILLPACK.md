@@ -488,6 +488,31 @@ missed signals, zero 3 AM pings.
 Every cron job includes: quiet hours check, location/timezone awareness, sub-agent
 spawning for heavy work.
 
+### The Dream Cycle (DREAMS.md)
+
+The most important cron job runs while you sleep. OpenClaw ships with DREAMS.md as a
+default skill. When quiet hours start, the dream cycle kicks off:
+
+1. **Entity sweep.** Scan today's conversations for every person, company, concept, or
+   idea you mentioned. Check each against the brain.
+2. **Enrich the thin spots.** Create pages for entities that don't exist yet. Update
+   pages that are thin. Write your direct assessments verbatim... the exact words you
+   used, not a cleaned-up paraphrase.
+3. **Fix broken citations.** Tweet links without URLs, missing source attributions,
+   timeline entries without dates. The citation hygiene problems that accumulate during
+   fast daytime conversations get cleaned up in the background.
+4. **Consolidate memory.** Signals that matter get promoted to MEMORY.md. Patterns the
+   agent noticed across multiple conversations get surfaced. Ephemeral context becomes
+   durable knowledge.
+
+The dream cycle is why the brain compounds. During the day, you're moving fast and the
+agent captures signal opportunistically. At night, the agent goes back through everything
+methodically. You wake up and the brain is smarter than when you went to sleep.
+
+This is the difference between an agent that forgets and one that remembers. The dream
+cycle is not optional for a production brain. Without it, signal leaks out of every
+conversation. With it, nothing is lost.
+
 ---
 
 ## 10. Content and Media Ingestion
