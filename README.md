@@ -199,12 +199,28 @@ Without an OpenAI key, search still works (keyword only, no vector search). With
 To install, paste this into OpenClaw and we'll work with you to do the rest:
 
 ```
-Set up gbrain (https://github.com/garrytan/gbrain) as my knowledge brain.
-1. Make sure bun is installed (curl -fsSL https://bun.sh/install | bash), then run: bun add github:garrytan/gbrain
-2. Run: gbrain init --supabase (follow the wizard to connect my Supabase database)
-3. Scan ~/git/ and ~/Documents/ for markdown repos, pick the best one, and run: gbrain import <path> --no-embed
+Set up gbrain (https://github.com/garrytan/gbrain) as my
+knowledge brain.
+
+1. Make sure bun is installed:
+   curl -fsSL https://bun.sh/install | bash
+   Then run: bun add github:garrytan/gbrain
+
+2. Run: gbrain init --supabase
+   (follow the wizard to connect my Supabase database)
+
+3. Scan ~/git/ and ~/Documents/ for markdown repos,
+   pick the best one, and run: gbrain import <path> --no-embed
+
 4. Run a query against the imported data to prove search works
-5. Read https://github.com/garrytan/gbrain/blob/master/docs/GBRAIN_RECOMMENDED_SCHEMA.md and offer to restructure my knowledge base
+
+5. Read docs/GBRAIN_RECOMMENDED_SCHEMA.md and offer to
+   restructure my knowledge base
+
+6. Read docs/GBRAIN_SKILLPACK.md and update all your skills
+   with the production agent patterns: brain-agent loop,
+   entity detection, source attribution, iron law back-linking,
+   and the enrichment pipeline
 ```
 
 OpenClaw will install gbrain, walk through Supabase setup, discover your markdown files, import them, and prove search works with a query from your data.
