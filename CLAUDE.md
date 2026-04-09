@@ -32,7 +32,7 @@ Run `gbrain --help` or `gbrain --tools-json` for full command reference.
 
 ## Testing
 
-`bun test` runs all tests (19 unit test files + 3 E2E test files). Unit tests run
+`bun test` runs all tests (20 unit test files + 4 E2E test files). Unit tests run
 without a database. E2E tests skip gracefully when `DATABASE_URL` is not set.
 
 Unit tests: `test/markdown.test.ts` (frontmatter parsing), `test/chunkers/recursive.test.ts`
@@ -44,13 +44,42 @@ parity), `test/cli.test.ts` (CLI structure), `test/config.test.ts` (config redac
 `test/import-resume.test.ts` (import checkpoints), `test/migrate.test.ts` (migration),
 `test/setup-branching.test.ts` (setup flow), `test/slug-validation.test.ts` (slug validation),
 `test/storage.test.ts` (storage backends), `test/supabase-admin.test.ts` (Supabase admin),
-`test/yaml-lite.test.ts` (YAML parsing).
+`test/yaml-lite.test.ts` (YAML parsing), `test/check-update.test.ts` (version check + update CLI).
 
 E2E tests (`test/e2e/`): Run against real Postgres+pgvector. Require `DATABASE_URL`.
 - `bun run test:e2e` runs Tier 1 (mechanical, all operations, no API keys)
+- `test/e2e/upgrade.test.ts` runs check-update E2E against real GitHub API (network required)
 - Tier 2 (`skills.test.ts`) requires OpenClaw + API keys, runs nightly in CI
-- Local setup: `docker compose -f docker-compose.test.yml up -d` then
-  `DATABASE_URL=postgresql://postgres:postgres@localhost:5434/gbrain_test bun run test:e2e`
+- If `.env.testing` doesn't exist in this directory, check sibling worktrees for one:
+  `find ../  -maxdepth 2 -name .env.testing -print -quit` and copy it here if found.
+- Always run E2E tests when they exist. Do not skip them just because DATABASE_URL
+  is not set. Start the test DB, run the tests, then tear it down.
+
+### E2E test DB lifecycle (ALWAYS follow this)
+
+You are responsible for spinning up and tearing down the test Postgres container.
+Do not leave containers running after tests. Do not skip E2E tests.
+
+1. **Check for `.env.testing`** — if missing, copy from sibling worktree.
+   Read it to get the DATABASE_URL (it has the port number).
+2. **Check if the port is free:**
+   `docker ps --filter "publish=PORT"` — if another container is on that port,
+   pick a different port (try 5435, 5436, 5437) and start on that one instead.
+3. **Start the test DB:**
+   ```bash
+   docker run -d --name gbrain-test-pg \
+     -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres \
+     -e POSTGRES_DB=gbrain_test \
+     -p PORT:5432 pgvector/pgvector:pg16
+   ```
+   Wait for ready: `docker exec gbrain-test-pg pg_isready -U postgres`
+4. **Run E2E tests:**
+   `DATABASE_URL=postgresql://postgres:postgres@localhost:PORT/gbrain_test bun run test:e2e`
+5. **Tear down immediately after tests finish (pass or fail):**
+   `docker stop gbrain-test-pg && docker rm gbrain-test-pg`
+
+Never leave `gbrain-test-pg` running. If you find a stale one from a previous run,
+stop and remove it before starting a new one.
 
 ## Skills
 
@@ -67,11 +96,27 @@ migrate, setup.
 
 Before shipping (/ship) or reviewing (/review), always run the full test suite:
 - `bun test` — unit tests (no database required)
-- `docker compose -f docker-compose.test.yml up -d` then
-  `DATABASE_URL=postgresql://postgres:postgres@localhost:5434/gbrain_test bun run test:e2e`
-  — E2E tests against real Postgres+pgvector
+- Follow the "E2E test DB lifecycle" steps above to spin up the test DB,
+  run `bun run test:e2e`, then tear it down.
 
-Both must pass. Do not ship with failing E2E tests.
+Both must pass. Do not ship with failing E2E tests. Do not skip E2E tests.
+
+## Version migrations
+
+When shipping a GBrain version that requires agent action after upgrade (schema
+changes, changed defaults, deprecated commands), create a migration file at
+`skills/migrations/v[version].md`. The auto-update agent reads these files
+post-upgrade and executes the directives. See GBRAIN_SKILLPACK.md Section 17.
+
+If a release only has bug fixes with no behavior changes, no migration file is needed.
+
+## Schema state tracking
+
+`~/.gbrain/update-state.json` tracks which recommended schema directories the user
+adopted, declined, or added custom. The auto-update agent (SKILLPACK Section 17)
+reads this during upgrades to suggest new schema additions without re-suggesting
+things the user already declined. The setup skill writes the initial state during
+Phase C/E. Never modify a user's custom directories or re-suggest declined ones.
 
 ## Skill routing
 
