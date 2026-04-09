@@ -69,6 +69,18 @@ async function main() {
   const engine = await connectEngine();
   try {
     const params = parseOpArgs(op, subArgs);
+
+    // Validate required params before calling handler
+    for (const [key, def] of Object.entries(op.params)) {
+      if (def.required && params[key] === undefined) {
+        const cliName = op.cliHints?.name || op.name;
+        const positional = op.cliHints?.positional || [];
+        const usage = positional.map(p => `<${p}>`).join(' ');
+        console.error(`Usage: gbrain ${cliName} ${usage}`);
+        process.exit(1);
+      }
+    }
+
     const ctx = makeContext(engine, params);
     const result = await op.handler(ctx, params);
     const output = formatResult(op.name, result);
