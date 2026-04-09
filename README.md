@@ -2,11 +2,9 @@
 
 The memex Vannevar Bush imagined, built for people who think for a living.
 
-**GBrain is a knowledge brain for [OpenClaw](https://openclaw.com) agents.** It gives your agent a searchable, indexed memory over your markdown repos using Postgres + pgvector + hybrid search. Works with any OpenClaw agent. Paste the install instructions into your agent, and it handles the rest.
+## How this happened
 
-### What one brain looks like
-
-Here's what one person built with gbrain and a single AI agent over six months:
+I was setting up my [OpenClaw](https://openclaw.com) agent and started a markdown brain repo. One page per person, one page per company, compiled truth on top, append-only timeline on the bottom. The agent got smarter the more it knew, so I kept feeding it. Meetings, emails, tweets, Apple Notes, calendar data, original ideas. One thing led to another. Within a week I had:
 
 - **10,000+ markdown files** indexed and searchable
 - **3,000+ people** with compiled dossiers and relationship history
@@ -17,7 +15,11 @@ Here's what one person built with gbrain and a single AI agent over six months:
 - **500+ media pages** (video transcripts, books, articles)
 - Company profiles, food guides, travel logs
 
-All in Postgres. All searchable by meaning, not just keywords. All maintained by an agent that runs while you sleep.
+This is what I actually use day to day. The agent runs while I sleep... literally. OpenClaw's dream cycle (DREAMS.md) scans every conversation from the day, enriches missing entities, fixes broken citations, and consolidates memory. I wake up and the brain is smarter than when I went to sleep.
+
+**You don't need Postgres to start.** The knowledge model is just markdown files in a git repo. The [skills](docs/GBRAIN_SKILLPACK.md) and [schema](docs/GBRAIN_RECOMMENDED_SCHEMA.md) work with any AI agent that can read and write files. Start there.
+
+I added Postgres + pgvector later because at 1,000 to 10,000 long markdown docs, `grep` stops working. You need real chunking, real retrieval, real search. GBrain is the thin CLI and MCP layer I built on top of Postgres to solve that, optimized for OpenClaw and smart agents.
 
 ### Ask it anything
 
@@ -33,21 +35,13 @@ All in Postgres. All searchable by meaning, not just keywords. All maintained by
 > "Prep me for my meeting with Jordan in 30 minutes"
 > — pulls dossier, shared history, recent activity, open threads
 
-Every meeting, email, tweet, and person enrichment flows back into the brain. Six months from now you know more than any human could retain. Not because you're taking notes — because the system never forgets.
-
 Your markdown repo is the source of truth. GBrain makes it searchable. Your AI agent makes it live.
 
-## Why this exists
+## Why Postgres
 
-Andrej Karpathy's [LLM OS / Knowledge LLM](https://x.com/karpathy/status/1723140519554105733) post sketched the vision: a personal wiki maintained by AI agents, where every page is a living document that gets smarter as the agent processes more information. I started building exactly that. Markdown files in a git repo, one page per entity, compiled truth on top, append-only timeline on the bottom.
+At 500 files, `grep` is fine. At 3,000 people pages, 5,800 Apple Notes, and 13 years of calendar data, `grep` falls apart. You need keyword search for exact names, vector search for semantic meaning, and something that fuses both. You need an index that updates incrementally when one file changes, not a full directory walk. You need your agent to find "everyone who was at the board dinner last March" in milliseconds, not 30 seconds of grepping.
 
-It worked. Until I hit thousands of files.
-
-At 500 files, `grep` is fine. At 3,000 people pages, 5,800 Apple Notes, and 13 years of calendar data, `grep` falls apart. You need real search: keyword for exact names, vector for semantic meaning, and something that fuses both. You need an index that updates incrementally when one file changes, not a full directory walk. You need your agent to find "everyone who was at the board dinner last March" in milliseconds, not 30 seconds of grepping.
-
-That's what GBrain is. The search and sync layer I had to build once the brain outgrew `grep`.
-
-GBrain fixes this with hybrid search that combines keyword and vector approaches, plus a knowledge model that treats every page like an intelligence assessment: compiled truth on top (your current best understanding, rewritten when evidence changes), append-only timeline on the bottom (the evidence trail that never gets edited).
+GBrain gives you hybrid search that combines keyword and vector approaches, plus a knowledge model that treats every page like an intelligence assessment: compiled truth on top (your current best understanding, rewritten when evidence changes), append-only timeline on the bottom (the evidence trail that never gets edited).
 
 AI agents maintain the brain. You ingest a document and the agent updates every entity mentioned, creates cross-reference links, and appends timeline entries. MCP clients query it. The intelligence lives in fat markdown skills, not application code.
 
@@ -175,7 +169,9 @@ Your file count will be different. Your queries will be different. The agent pic
 
 ### Prerequisites
 
-GBrain needs three things to run:
+**Without Postgres**, you can use the GBrain knowledge model right now: the [skills](docs/GBRAIN_SKILLPACK.md), [schema](docs/GBRAIN_RECOMMENDED_SCHEMA.md), and compiled truth + timeline pattern work with any agent that reads and writes markdown files. Add Postgres when `grep` stops being enough.
+
+**With Postgres**, GBrain needs three things:
 
 | Dependency | What it's for | How to get it |
 |------------|--------------|---------------|
@@ -222,13 +218,9 @@ knowledge brain.
    entity detection, source attribution, iron law back-linking,
    and the enrichment pipeline
 
-7. Set up daily GBrain update checks. Run `gbrain check-update`
-   to verify it works, then register a daily cron that checks
-   for new versions and messages me when there's something
-   worth upgrading to. I'll always be asked before anything
-   is installed — just let me know when updates are available.
-   Only notify me for meaningful updates (new features),
-   not small patches.
+7. Set up a daily cron for `gbrain check-update`.
+   Notify me on new features only, not patches.
+   Never auto-install, just tell me what's new.
 ```
 
 OpenClaw will install gbrain, walk through Supabase setup, discover your markdown files, import them, and prove search works with a query from your data.
