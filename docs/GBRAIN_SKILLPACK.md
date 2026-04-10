@@ -488,10 +488,10 @@ missed signals, zero 3 AM pings.
 Every cron job includes: quiet hours check, location/timezone awareness, sub-agent
 spawning for heavy work.
 
-### The Dream Cycle (DREAMS.md)
+### The Dream Cycle
 
-The most important cron job runs while you sleep. OpenClaw/Hermes ships with DREAMS.md
-as a default skill. When quiet hours start, the dream cycle kicks off:
+The most important cron job runs while you sleep. When quiet hours start, the dream
+cycle kicks off:
 
 1. **Entity sweep.** Scan today's conversations for every person, company, concept, or
    idea you mentioned. Check each against the brain.
@@ -512,6 +512,35 @@ methodically. You wake up and the brain is smarter than when you went to sleep.
 This is the difference between an agent that forgets and one that remembers. The dream
 cycle is not optional for a production brain. Without it, signal leaks out of every
 conversation. With it, nothing is lost.
+
+#### OpenClaw
+
+Ships with DREAMS.md as a default skill. Three phases (light, deep, REM) run
+automatically during quiet hours. Entity sweeps, memory promotion, and a narrative
+dream diary are built in.
+
+#### Hermes Agent
+
+Hermes has all the pieces but doesn't bundle a dream cycle by default. Set one up
+with the cron scheduler:
+
+```
+/cron add "0 2 * * *" "Dream cycle: search today's sessions for
+  entities I mentioned. For each person, company, or idea: check
+  if a brain page exists (gbrain search), create or update it if
+  thin. Fix any broken citations. Then consolidate: read MEMORY.md,
+  promote important signals, remove stale entries."
+  --name "nightly-dream-cycle"
+```
+
+The scheduled job spawns an isolated agent session that can call `session_search()`
+to scan recent conversations (FTS5 over SQLite), `gbrain search` / `gbrain get` to
+check the brain, and `memory(action="replace")` to consolidate. Enable Honcho
+(`plugins/memory/honcho`) for automatic dialectic reasoning on top.
+
+Key Hermes files for reference: `tools/memory_tool.py` (MEMORY.md/USER.md ops),
+`tools/session_search_tool.py` (past conversation retrieval),
+`cron/scheduler.py` (gateway tick loop).
 
 ---
 
