@@ -60,7 +60,13 @@ export async function disconnect(): Promise<void> {
 
 export async function initSchema(): Promise<void> {
   const conn = getConnection();
-  await conn.unsafe(SCHEMA_SQL);
+  // Advisory lock prevents concurrent initSchema() calls from deadlocking
+  await conn`SELECT pg_advisory_lock(42)`;
+  try {
+    await conn.unsafe(SCHEMA_SQL);
+  } finally {
+    await conn`SELECT pg_advisory_unlock(42)`;
+  }
 }
 
 export async function withTransaction<T>(fn: (tx: ReturnType<typeof postgres>) => Promise<T>): Promise<T> {

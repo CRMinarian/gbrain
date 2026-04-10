@@ -57,12 +57,19 @@ export class PostgresEngine implements BrainEngine {
 
   async initSchema(): Promise<void> {
     const conn = this.sql;
-    await conn.unsafe(SCHEMA_SQL);
+    // Advisory lock prevents concurrent initSchema() calls from deadlocking
+    // on DDL statements (DROP TRIGGER + CREATE TRIGGER acquire AccessExclusiveLock)
+    await conn`SELECT pg_advisory_lock(42)`;
+    try {
+      await conn.unsafe(SCHEMA_SQL);
 
-    // Run any pending migrations automatically
-    const { applied } = await runMigrations(this);
-    if (applied > 0) {
-      console.log(`  ${applied} migration(s) applied`);
+      // Run any pending migrations automatically
+      const { applied } = await runMigrations(this);
+      if (applied > 0) {
+        console.log(`  ${applied} migration(s) applied`);
+      }
+    } finally {
+      await conn`SELECT pg_advisory_unlock(42)`;
     }
   }
 
