@@ -234,41 +234,39 @@ export class PostgresEngine implements BrainEngine {
       return;
     }
 
-    // Upsert chunks — preserves existing embeddings when new embedding is undefined
+    // Batch upsert: build a single multi-row INSERT ON CONFLICT statement
+    // This avoids per-row round-trips and reduces lock contention under parallel workers
+    const cols = '(page_id, chunk_index, chunk_text, chunk_source, embedding, model, token_count, embedded_at)';
+    const rows: string[] = [];
+    const params: unknown[] = [];
+    let paramIdx = 1;
+
     for (const chunk of chunks) {
       const embeddingStr = chunk.embedding
         ? '[' + Array.from(chunk.embedding).join(',') + ']'
         : null;
 
       if (embeddingStr) {
-        await sql.unsafe(
-          `INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, embedding, model, token_count, embedded_at)
-           VALUES ($1, $2, $3, $4, $5::vector, $6, $7, now())
-           ON CONFLICT (page_id, chunk_index) DO UPDATE SET
-             chunk_text = EXCLUDED.chunk_text,
-             chunk_source = EXCLUDED.chunk_source,
-             embedding = EXCLUDED.embedding,
-             model = EXCLUDED.model,
-             token_count = EXCLUDED.token_count,
-             embedded_at = EXCLUDED.embedded_at`,
-          [pageId, chunk.chunk_index, chunk.chunk_text, chunk.chunk_source, embeddingStr, chunk.model || 'text-embedding-3-large', chunk.token_count || null],
-        );
+        rows.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}::vector, $${paramIdx++}, $${paramIdx++}, now())`);
+        params.push(pageId, chunk.chunk_index, chunk.chunk_text, chunk.chunk_source, embeddingStr, chunk.model || 'text-embedding-3-large', chunk.token_count || null);
       } else {
-        // No new embedding: preserve existing embedding via COALESCE
-        await sql.unsafe(
-          `INSERT INTO content_chunks (page_id, chunk_index, chunk_text, chunk_source, embedding, model, token_count, embedded_at)
-           VALUES ($1, $2, $3, $4, NULL, $5, $6, NULL)
-           ON CONFLICT (page_id, chunk_index) DO UPDATE SET
-             chunk_text = EXCLUDED.chunk_text,
-             chunk_source = EXCLUDED.chunk_source,
-             embedding = COALESCE(content_chunks.embedding, EXCLUDED.embedding),
-             model = COALESCE(content_chunks.model, EXCLUDED.model),
-             token_count = EXCLUDED.token_count,
-             embedded_at = COALESCE(content_chunks.embedded_at, EXCLUDED.embedded_at)`,
-          [pageId, chunk.chunk_index, chunk.chunk_text, chunk.chunk_source, chunk.model || 'text-embedding-3-large', chunk.token_count || null],
-        );
+        rows.push(`($${paramIdx++}, $${paramIdx++}, $${paramIdx++}, $${paramIdx++}, NULL, $${paramIdx++}, $${paramIdx++}, NULL)`);
+        params.push(pageId, chunk.chunk_index, chunk.chunk_text, chunk.chunk_source, chunk.model || 'text-embedding-3-large', chunk.token_count || null);
       }
     }
+
+    // Single statement upsert: preserves existing embeddings via COALESCE when new value is NULL
+    await sql.unsafe(
+      `INSERT INTO content_chunks ${cols} VALUES ${rows.join(', ')}
+       ON CONFLICT (page_id, chunk_index) DO UPDATE SET
+         chunk_text = EXCLUDED.chunk_text,
+         chunk_source = EXCLUDED.chunk_source,
+         embedding = COALESCE(EXCLUDED.embedding, content_chunks.embedding),
+         model = COALESCE(EXCLUDED.model, content_chunks.model),
+         token_count = EXCLUDED.token_count,
+         embedded_at = COALESCE(EXCLUDED.embedded_at, content_chunks.embedded_at)`,
+      params,
+    );
   }
 
   async getChunks(slug: string): Promise<Chunk[]> {
