@@ -147,6 +147,33 @@ INSERT INTO config (key, value) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- ============================================================
+-- access_tokens: bearer tokens for remote MCP access
+-- ============================================================
+CREATE TABLE IF NOT EXISTS access_tokens (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT NOT NULL,
+  token_hash   TEXT NOT NULL UNIQUE,
+  scopes       TEXT[],
+  created_at   TIMESTAMPTZ DEFAULT now(),
+  last_used_at TIMESTAMPTZ,
+  revoked_at   TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_access_tokens_hash ON access_tokens (token_hash) WHERE revoked_at IS NULL;
+
+-- ============================================================
+-- mcp_request_log: usage logging for remote MCP requests
+-- ============================================================
+CREATE TABLE IF NOT EXISTS mcp_request_log (
+  id         SERIAL PRIMARY KEY,
+  token_name TEXT,
+  operation  TEXT NOT NULL,
+  latency_ms INTEGER,
+  status     TEXT NOT NULL DEFAULT 'success',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ============================================================
 -- files: binary attachments stored in Supabase Storage
 -- ============================================================
 CREATE TABLE IF NOT EXISTS files (

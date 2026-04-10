@@ -3,8 +3,9 @@ import { join } from 'path';
 import { homedir } from 'os';
 import type { EngineConfig } from './types.ts';
 
-const CONFIG_DIR = join(homedir(), '.gbrain');
-const CONFIG_PATH = join(CONFIG_DIR, 'config.json');
+// Lazy-evaluated to avoid calling homedir() at module scope (breaks in Deno Edge Functions)
+function getConfigDir() { return join(homedir(), '.gbrain'); }
+function getConfigPath() { return join(getConfigDir(), 'config.json'); }
 
 export interface GBrainConfig {
   engine: 'postgres' | 'sqlite';
@@ -21,7 +22,7 @@ export interface GBrainConfig {
 export function loadConfig(): GBrainConfig | null {
   let fileConfig: GBrainConfig | null = null;
   try {
-    const raw = readFileSync(CONFIG_PATH, 'utf-8');
+    const raw = readFileSync(getConfigPath(), 'utf-8');
     fileConfig = JSON.parse(raw) as GBrainConfig;
   } catch { /* no config file */ }
 
@@ -40,10 +41,10 @@ export function loadConfig(): GBrainConfig | null {
 }
 
 export function saveConfig(config: GBrainConfig): void {
-  mkdirSync(CONFIG_DIR, { recursive: true });
-  writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
+  mkdirSync(getConfigDir(), { recursive: true });
+  writeFileSync(getConfigPath(), JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
   try {
-    chmodSync(CONFIG_PATH, 0o600);
+    chmodSync(getConfigPath(), 0o600);
   } catch {
     // chmod may fail on some platforms
   }
@@ -58,9 +59,9 @@ export function toEngineConfig(config: GBrainConfig): EngineConfig {
 }
 
 export function getConfigDir(): string {
-  return CONFIG_DIR;
+  return getConfigDir();
 }
 
 export function getConfigPath(): string {
-  return CONFIG_PATH;
+  return getConfigPath();
 }

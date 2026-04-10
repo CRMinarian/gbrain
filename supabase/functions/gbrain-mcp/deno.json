@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "postgres": "npm:postgres@3",
+    "openai": "npm:openai@4",
+    "@modelcontextprotocol/sdk/": "npm:@modelcontextprotocol/sdk@1/",
+    "hono": "npm:hono@4",
+    "hono/cors": "npm:hono@4/cors",
+    "crypto": "node:crypto"
+  }
+}
