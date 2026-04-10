@@ -23,7 +23,13 @@ server are both generated from this single source. Skills are fat markdown files
 - `src/core/search/` — Hybrid search: vector + keyword + RRF + multi-query expansion + dedup
 - `src/core/embedding.ts` — OpenAI text-embedding-3-large, batch, retry, backoff
 - `src/mcp/server.ts` — MCP stdio server (generated from operations)
-- `src/schema.sql` — Full Postgres + pgvector DDL (includes files table)
+- `supabase/functions/gbrain-mcp/index.ts` — Remote MCP server (Supabase Edge Function)
+- `src/edge-entry.ts` — Curated bundle entry point for Edge Function (excludes fs-dependent modules)
+- `src/commands/auth.ts` — Standalone token management (create/list/revoke/test)
+- `src/core/schema-embedded.ts` — AUTO-GENERATED from schema.sql (run `bun run build:schema`)
+- `src/schema.sql` — Full Postgres + pgvector DDL (source of truth, generates schema-embedded.ts)
+- `scripts/deploy-remote.sh` — One-script remote MCP deployment
+- `docs/mcp/` — Per-client setup guides (Claude Desktop, Code, Cowork, Perplexity, ChatGPT)
 - `openclaw.plugin.json` — ClawHub bundle plugin manifest
 
 ## Commands
@@ -117,6 +123,25 @@ Before shipping (/ship) or reviewing (/review), always run the full test suite:
   run `bun run test:e2e`, then tear it down.
 
 Both must pass. Do not ship with failing E2E tests. Do not skip E2E tests.
+
+## Post-ship requirements (MANDATORY)
+
+After EVERY /ship, you MUST run /document-release. This is NOT optional. Do NOT
+skip it. Do NOT say "docs look fine" without running it. The skill reads every .md
+file in the project, cross-references the diff, and updates anything that drifted.
+
+If /ship's Step 8.5 triggers document-release automatically, that counts. But if
+it gets skipped for ANY reason (timeout, error, oversight), you MUST run it manually
+before considering the ship complete.
+
+Files that MUST be checked on every ship:
+- README.md — does it reflect new features, commands, or setup steps?
+- CLAUDE.md — does it reflect new files, test files, or architecture changes?
+- CHANGELOG.md — does it cover every commit?
+- TODOS.md — are completed items marked done?
+- docs/ — do any guides need updating?
+
+A ship without updated docs is an incomplete ship. Period.
 
 ## CHANGELOG voice
 
