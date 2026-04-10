@@ -58,10 +58,10 @@ export function toEngineConfig(config: GBrainConfig): EngineConfig {
   };
 }
 
-export function getConfigDir(): string {
-  return getConfigDir();
+export function configDir(): string {
+  return join(homedir(), '.gbrain');
 }
 
-export function getConfigPath(): string {
-  return getConfigPath();
+export function configPath(): string {
+  return join(configDir(), 'config.json');
 }
