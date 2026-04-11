@@ -1,3 +1,7 @@
+// AUTO-GENERATED — do not edit. Run: bun run build:schema
+// Source: src/schema.sql
+
+export const SCHEMA_SQL = `
 -- GBrain Postgres + pgvector schema
 
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -199,7 +203,7 @@ ALTER TABLE pages ADD COLUMN IF NOT EXISTS search_vector tsvector;
 CREATE INDEX IF NOT EXISTS idx_pages_search ON pages USING GIN(search_vector);
 
 -- Function to rebuild search_vector for a page
-CREATE OR REPLACE FUNCTION update_page_search_vector() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION update_page_search_vector() RETURNS trigger AS \$\$
 DECLARE
   timeline_text TEXT;
 BEGIN
@@ -218,7 +222,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+\$\$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_pages_search_vector ON pages;
 CREATE TRIGGER trg_pages_search_vector
@@ -227,7 +231,7 @@ CREATE TRIGGER trg_pages_search_vector
   EXECUTE FUNCTION update_page_search_vector();
 
 -- When timeline_entries change, update the parent page's search_vector
-CREATE OR REPLACE FUNCTION update_page_search_vector_from_timeline() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION update_page_search_vector_from_timeline() RETURNS trigger AS \$\$
 DECLARE
   page_row pages%ROWTYPE;
 BEGIN
@@ -236,7 +240,7 @@ BEGIN
   WHERE id = coalesce(NEW.page_id, OLD.page_id);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+\$\$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_timeline_search_vector ON timeline_entries;
 CREATE TRIGGER trg_timeline_search_vector
@@ -251,7 +255,7 @@ CREATE TRIGGER trg_timeline_search_vector
 -- Enabling RLS with no policies means the anon key can't read anything.
 -- Only enable if the current role actually has BYPASSRLS privilege,
 -- otherwise we'd lock ourselves out.
-DO $$
+DO \$\$
 DECLARE
   has_bypass BOOLEAN;
 BEGIN
@@ -271,4 +275,5 @@ BEGIN
   ELSE
     RAISE WARNING 'Skipping RLS: role % does not have BYPASSRLS privilege. Run as postgres role to enable.', current_user;
   END IF;
-END $$;
+END \$\$;
+`;

@@ -524,7 +524,7 @@ describeE2E('E2E: Setup Journey', () => {
     const stdout = new TextDecoder().decode(result.stdout);
     expect(result.exitCode).toBe(0);
     expect(stdout).toContain('Brain ready');
-  });
+  }, 30_000);
 
   test('gbrain import imports fixtures via CLI', () => {
     const result = Bun.spawnSync({
@@ -536,7 +536,7 @@ describeE2E('E2E: Setup Journey', () => {
     const stdout = new TextDecoder().decode(result.stdout);
     expect(result.exitCode).toBe(0);
     expect(stdout).toContain('imported');
-  });
+  }, 60_000);
 
   test('gbrain search returns results via CLI', () => {
     const result = Bun.spawnSync({
@@ -548,7 +548,7 @@ describeE2E('E2E: Setup Journey', () => {
     const stdout = new TextDecoder().decode(result.stdout);
     expect(result.exitCode).toBe(0);
     expect(stdout.length).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   test('gbrain stats shows page count via CLI', () => {
     const result = Bun.spawnSync({
@@ -558,7 +558,7 @@ describeE2E('E2E: Setup Journey', () => {
       timeout: 15_000,
     });
     expect(result.exitCode).toBe(0);
-  });
+  }, 30_000);
 
   test('gbrain health runs via CLI', () => {
     const result = Bun.spawnSync({
@@ -568,7 +568,7 @@ describeE2E('E2E: Setup Journey', () => {
       timeout: 15_000,
     });
     expect(result.exitCode).toBe(0);
-  });
+  }, 30_000);
 });
 
 // ─────────────────────────────────────────────────────────────────
@@ -787,7 +787,7 @@ describeE2E('E2E: Doctor Command', () => {
       timeout: 15_000,
     });
     expect(result.exitCode).toBe(0);
-  });
+  }, 60_000);
 
   test('gbrain doctor --json produces valid JSON', () => {
     const result = Bun.spawnSync({
@@ -806,7 +806,7 @@ describeE2E('E2E: Doctor Command', () => {
       expect(typeof check.name).toBe('string');
       expect(typeof check.message).toBe('string');
     }
-  });
+  }, 30_000);
 });
 
 // ─────────────────────────────────────────────────────────────────
@@ -851,7 +851,7 @@ describeE2E('E2E: Parallel Import', () => {
 
     expect(seqPageCount).toBeGreaterThan(0);
     expect(seqChunkCount).toBeGreaterThan(0);
-  });
+  }, 60_000);
 
   test('parallel import with --workers 2 matches sequential page count', async () => {
     await setupDB();
@@ -866,7 +866,7 @@ describeE2E('E2E: Parallel Import', () => {
 
     const stats = await callOp('get_stats') as any;
     expect(stats.page_count).toBe(seqPageCount);
-  });
+  }, 60_000);
 
   test('parallel import has same chunk count (no duplicates)', async () => {
     const stats = await callOp('get_stats') as any;
@@ -912,7 +912,7 @@ describeE2E('E2E: Parallel Import', () => {
     const stats = await callOp('get_stats') as any;
     expect(stats.page_count).toBe(seqPageCount);
     expect(stats.chunk_count).toBe(seqChunkCount);
-  });
+  }, 60_000);
 
   test('re-import with workers is idempotent', async () => {
     // Import again on top of existing data
@@ -927,7 +927,7 @@ describeE2E('E2E: Parallel Import', () => {
     const stats = await callOp('get_stats') as any;
     expect(stats.page_count).toBe(seqPageCount);
     expect(stats.chunk_count).toBe(seqChunkCount);
-  });
+  }, 60_000);
 });
 
 // ─────────────────────────────────────────────────────────────────

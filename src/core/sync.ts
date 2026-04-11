@@ -131,5 +131,5 @@ export function slugifyPath(filePath: string): string {
 export function pathToSlug(filePath: string, repoPrefix?: string): string {
   let slug = slugifyPath(filePath);
   if (repoPrefix) slug = `${repoPrefix}/${slug}`;
-  return slug;
+  return slug.toLowerCase();
 }

@@ -48,6 +48,40 @@ const MIGRATIONS: Migration[] = [
       if (renamed > 0) console.log(`  Renamed ${renamed} slugs`);
     },
   },
+  {
+    version: 3,
+    name: 'unique_chunk_index',
+    sql: `
+      -- Deduplicate any existing duplicate (page_id, chunk_index) rows before adding constraint
+      DELETE FROM content_chunks a USING content_chunks b
+        WHERE a.page_id = b.page_id AND a.chunk_index = b.chunk_index AND a.id > b.id;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_chunks_page_index ON content_chunks(page_id, chunk_index);
+    `,
+  },
+  {
+    version: 4,
+    name: 'access_tokens_and_mcp_log',
+    sql: `
+      CREATE TABLE IF NOT EXISTS access_tokens (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        scopes TEXT[],
+        created_at TIMESTAMPTZ DEFAULT now(),
+        last_used_at TIMESTAMPTZ,
+        revoked_at TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_access_tokens_hash ON access_tokens (token_hash) WHERE revoked_at IS NULL;
+      CREATE TABLE IF NOT EXISTS mcp_request_log (
+        id SERIAL PRIMARY KEY,
+        token_name TEXT,
+        operation TEXT NOT NULL,
+        latency_ms INTEGER,
+        status TEXT NOT NULL DEFAULT 'success',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `,
+  },
 ];
 
 export const LATEST_VERSION = MIGRATIONS.length > 0

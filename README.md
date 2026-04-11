@@ -298,6 +298,25 @@ GBrain exposes 30 MCP tools via stdio. Add this to your MCP client config:
 
 This gives your agent `get_page`, `put_page`, `search`, `query`, `add_link`, `traverse_graph`, `sync_brain`, `file_upload`, and 22 more tools. All generated from the same operation definitions as the CLI.
 
+#### Remote MCP Server (Claude Desktop, Cowork, Perplexity, ChatGPT)
+
+Access your brain from any device, any AI client. Deploy as a serverless endpoint on your existing Supabase instance:
+
+```bash
+cp .env.production.example .env.production   # fill in 3 values
+bash scripts/deploy-remote.sh                 # links, builds, deploys
+bun run src/commands/auth.ts create "claude-desktop"  # get a token
+```
+
+Then add to your AI client:
+- **Claude Code:** `claude mcp add gbrain -t http https://YOUR_REF.supabase.co/functions/v1/gbrain-mcp/mcp -H "Authorization: Bearer TOKEN"`
+- **Claude Desktop:** Settings > Integrations > Add (NOT JSON config)
+- **Perplexity Computer:** Settings > Connectors > Add remote MCP
+
+Per-client setup guides: [`docs/mcp/`](docs/mcp/DEPLOY.md)
+
+ChatGPT support requires OAuth 2.1 and is coming in v0.7. Self-hosted alternatives (Tailscale Funnel, ngrok) documented in [`docs/mcp/ALTERNATIVES.md`](docs/mcp/ALTERNATIVES.md).
+
 **The tools are not enough.** Your agent also needs the playbook: read [GBRAIN_SKILLPACK.md](docs/GBRAIN_SKILLPACK.md) and paste the relevant sections into your agent's system prompt or project instructions. The skillpack tells the agent WHEN and HOW to use each tool: read before responding, write after learning, detect entities on every message, back-link everything.
 
 The skill markdown files in `skills/` are standalone instruction sets. Copy them into your agent's context:
@@ -620,7 +639,9 @@ ADMIN
   gbrain history <slug>                     Page version history
   gbrain revert <slug> <version-id>         Revert to previous version
   gbrain config [get|set] <key> [value]     Brain config
-  gbrain serve                              MCP server (stdio)
+  gbrain serve                              MCP server (stdio, local)
+  scripts/deploy-remote.sh                  Deploy remote MCP server (Supabase Edge Functions)
+  bun run src/commands/auth.ts              Token management (create/list/revoke/test)
   gbrain call <tool> '<json>'               Raw tool invocation
   gbrain --tools-json                       Tool discovery (JSON)
 ```
