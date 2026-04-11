@@ -31,9 +31,8 @@ markdown files (tool-agnostic, work with both CLI and plugin contexts).
 - `src/core/search/` — Hybrid search: vector + keyword + RRF + multi-query expansion + dedup
 - `src/core/embedding.ts` — OpenAI text-embedding-3-large, batch, retry, backoff
 - `src/mcp/server.ts` — MCP stdio server (generated from operations)
-- `supabase/functions/gbrain-mcp/index.ts` — Remote MCP server (Supabase Edge Function)
-- `src/edge-entry.ts` — Curated bundle entry point for Edge Function (excludes fs-dependent modules)
 - `src/commands/auth.ts` — Standalone token management (create/list/revoke/test)
+- `src/commands/upgrade.ts` — Self-update CLI with post-upgrade feature discovery
 - `src/core/schema-embedded.ts` — AUTO-GENERATED from schema.sql (run `bun run build:schema`)
 - `src/schema.sql` — Full Postgres + pgvector DDL (source of truth, generates schema-embedded.ts)
 - `src/commands/integrations.ts` — Standalone integration recipe management (no DB needed)
@@ -50,8 +49,8 @@ markdown files (tool-agnostic, work with both CLI and plugin contexts).
 - `docs/guides/quiet-hours.md` — Notification hold + timezone-aware delivery
 - `docs/guides/diligence-ingestion.md` — Data room to brain pages pipeline
 - `docs/designs/HOMEBREW_FOR_PERSONAL_AI.md` — 10-star vision for integration system
-- `scripts/deploy-remote.sh` — One-script remote MCP deployment
-- `docs/mcp/` — Per-client setup guides (Claude Desktop, Code, Cowork, Perplexity, ChatGPT)
+- `docs/mcp/` — Per-client setup guides (Claude Desktop, Code, Cowork, Perplexity)
+- `skills/migrations/` — Version migration files with feature_pitch YAML frontmatter
 - `openclaw.plugin.json` — ClawHub bundle plugin manifest
 
 ## Commands
