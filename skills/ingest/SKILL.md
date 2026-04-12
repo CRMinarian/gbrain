@@ -186,21 +186,33 @@ if the post is primarily about a person/company.
 
 Every ingested item must have its raw source preserved for provenance.
 
-- **< 100 MB** (text, PDFs, transcripts): store in brain repo `.raw/` sidecar
-  directories alongside the brain page
-- **>= 100 MB** (video, audio, large datasets): upload to cloud storage (Supabase
-  Storage, S3, etc.) and store a `.redirect.yaml` pointer in the brain repo
-
-The `.redirect.yaml` format:
-```yaml
-storage: supabase
-bucket: brain-files
-path: media/videos/raw/video-id.mp4
-uploaded: 2026-04-11T...
-size_bytes: 524288000
+**Use `gbrain files upload-raw` for automatic size routing:**
+```bash
+gbrain files upload-raw <file> --page <page-slug> --type <type>
 ```
 
-Use `put_raw_data` in gbrain to store raw API responses and metadata.
+- **< 100 MB text/PDF**: stays in git (brain repo `.raw/` sidecar directories)
+- **>= 100 MB OR media** (video, audio, images): uploaded to cloud storage
+  via TUS resumable upload, `.redirect.yaml` pointer left in the brain repo
+
+The `.redirect.yaml` pointer format:
+```yaml
+target: supabase://brain-files/page-slug/filename.mp4
+bucket: brain-files
+storage_path: page-slug/filename.mp4
+size: 524288000
+size_human: 500 MB
+hash: sha256:abc123...
+mime: video/mp4
+uploaded: 2026-04-11T...
+type: transcript
+```
+
+**Accessing stored files:**
+- `gbrain files signed-url <storage-path>` -- generate 1-hour signed URL for viewing/sharing
+- `gbrain files restore <dir>` -- download back to local from cloud storage
+
+Use `put_raw_data` in gbrain to store raw API responses and metadata (JSON, not binary).
 
 ## Test Before Bulk
 

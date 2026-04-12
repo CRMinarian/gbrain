@@ -575,8 +575,10 @@ maintains it throughout the conversation.
 **Fix:** Auto-upload ALL call audio immediately on call end:
 - Twilio calls: download the MP3 recording URL from Twilio
 - WebRTC calls: capture via MediaRecorder (webm/opus format)
-- Upload to cloud storage (Supabase Storage, S3, etc.)
-- Store `.redirect.yaml` pointer in brain repo if >= 100 MB
+- Upload via `gbrain files upload-raw <audio-file> --page meetings/call-slug --type call-recording`
+- GBrain auto-routes: small files stay in git, large files go to cloud storage
+  with `.redirect.yaml` pointer. Files >= 100 MB use TUS resumable upload.
+- Generate signed URLs for playback: `gbrain files signed-url <storage-path>`
 - This ensures every call has a recoverable audio source regardless
   of whether the transcript or brain page was created successfully
 

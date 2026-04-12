@@ -75,10 +75,40 @@ silently pick one.
 
 ## Raw Source Preservation
 
-Every ingested item should have its raw source preserved for provenance:
-- **< 100 MB** (text, PDFs, transcripts): store in the brain repo (git-tracked)
-  in a `.raw/` sidecar directory alongside the brain page
-- **>= 100 MB** (video, audio, large datasets): upload to cloud storage and
-  store a `.redirect.yaml` pointer in the brain repo
+Every ingested item should have its raw source preserved for provenance.
 
-This ensures any derived brain page can be traced back to its original source.
+**Size routing (automatic via `gbrain files upload-raw`):**
+- **< 100 MB text/PDF**: stays in the brain repo (git-tracked) in a `.raw/`
+  sidecar directory alongside the brain page
+- **>= 100 MB OR media files** (video, audio, images): uploaded to cloud
+  storage (Supabase Storage, S3, etc.) with a `.redirect.yaml` pointer left
+  in the brain repo. Files >= 100 MB use TUS resumable upload (6 MB chunks
+  with retry) for reliability.
+
+**Upload command:**
+```bash
+gbrain files upload-raw <file> --page <page-slug> --type <type>
+```
+Returns JSON: `{storage: "git"}` for small files, `{storage: "supabase", storagePath, reference}` for cloud.
+
+**The `.redirect.yaml` pointer format:**
+```yaml
+target: supabase://brain-files/page-slug/filename.mp4
+bucket: brain-files
+storage_path: page-slug/filename.mp4
+size: 524288000
+size_human: 500 MB
+hash: sha256:abc123...
+mime: video/mp4
+uploaded: 2026-04-11T...
+type: transcript
+```
+
+**Accessing stored files:**
+```bash
+gbrain files signed-url <storage-path>    # Generate 1-hour signed URL
+gbrain files restore <dir>                # Download back to local
+```
+
+This ensures any derived brain page can be traced back to its original source,
+and large files don't bloat the git repo.

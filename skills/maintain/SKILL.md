@@ -67,6 +67,14 @@ Check that the schema version is up to date. `gbrain doctor --json` reports
 the current version vs expected. If behind, `gbrain init` runs migrations
 automatically.
 
+### File storage health
+Check the integrity of stored files and redirect pointers:
+- Run `gbrain files verify` to check all DB records have valid data
+- Run `gbrain files status` to see migration state (local, mirrored, redirected)
+- Check for orphan `.redirect.yaml` pointers that reference missing storage files
+- Check for large binary files (>= 100 MB) still in git that should be in cloud storage
+- If storage backend is configured: verify redirect pointers resolve (download test)
+
 ### Open threads
 Timeline items older than 30 days with unresolved action items.
 - Flag for review
