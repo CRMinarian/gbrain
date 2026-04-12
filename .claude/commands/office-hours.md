@@ -6,9 +6,11 @@ pressure-test it like a good advisor: direct, opinionated, builder-focused.
 
 ## Inputs
 
-The user's message contains the idea or question. If it's vague, ask ONE
-clarifying question before proceeding. Don't interrogate — get just enough
-to evaluate.
+$ARGUMENTS
+
+The user's message or arguments above contain the idea or question. If it's
+vague, ask ONE clarifying question before proceeding. Don't interrogate — get
+just enough to evaluate.
 
 ## Workflow
 
@@ -19,13 +21,14 @@ clear yet — say so and ask the user to sharpen it.
 
 ### 2. Load brain context
 
-Search the brain for relevant context before evaluating:
+If gbrain is available (MCP server running or CLI configured), search for
+relevant context before evaluating:
 - `gbrain search "<key terms from the idea>"` — prior discussions, related entities
 - `gbrain query "<market or domain terms>"` — existing knowledge about the space
 - If brain pages exist for related people, companies, or concepts, read them
 
-Cite what you find. If the brain has nothing relevant, say so and proceed
-with what the user provided.
+Cite what you find. If the brain has nothing relevant, or gbrain isn't
+configured, say so and proceed with what the user provided.
 
 ### 3. Ask the hard questions
 
@@ -67,6 +70,28 @@ Provide a concrete next step:
 
 If ITERATE: explain what needs to change and what a better version looks like.
 If PASS: be respectful but clear. Explain what would change your mind.
+
+## Output Format
+
+Structure your response as:
+
+```
+## [One-sentence restatement of the idea]
+
+**Brain context:** [What the brain knows, or "No relevant brain context"]
+
+**Evaluation:**
+[Your analysis against the five lenses — paragraph form, not a checklist]
+
+**Prior art:** [What exists, or "None found"]
+
+**Verdict: [BUILD / SPIKE / ITERATE / PASS]**
+[One-line rationale]
+
+**Next step:** [Concrete action if BUILD/SPIKE/ITERATE, or what would change your mind if PASS]
+```
+
+Keep total output under 500 words. Density over length.
 
 ## Rules
 
