@@ -26,7 +26,7 @@ markdown files (tool-agnostic, work with both CLI and plugin contexts).
 - `src/core/sync.ts` — Pure sync functions (manifest parsing, filtering, slug conversion)
 - `src/core/storage.ts` — Pluggable storage interface (S3, Supabase Storage, local)
 - `src/core/supabase-admin.ts` — Supabase admin API (project discovery, pgvector check)
-- `src/core/file-resolver.ts` — MIME detection, content hashing for file uploads
+- `src/core/file-resolver.ts` — File resolution with fallback chain (local -> .redirect.yaml -> .redirect -> .supabase)
 - `src/core/chunkers/` — 3-tier chunking (recursive, semantic, LLM-guided)
 - `src/core/search/` — Hybrid search: vector + keyword + RRF + multi-query expansion + dedup
 - `src/core/embedding.ts` — OpenAI text-embedding-3-large, batch, retry, backoff

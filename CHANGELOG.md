@@ -2,76 +2,66 @@
 
 All notable changes to GBrain will be documented in this file.
 
-## [0.8.1] - 2026-04-11
+## [0.9.0] - 2026-04-11
 
 ### Added
 
+- **Large files don't bloat your git repo anymore.** `gbrain files upload-raw`
+  auto-routes by size: text and PDFs under 100 MB stay in git, everything larger
+  (or any media file) goes to Supabase Storage with a `.redirect.yaml` pointer
+  left in the repo. Files over 100 MB use TUS resumable upload (6 MB chunks with
+  retry and backoff) so a flaky connection doesn't lose a 2 GB video upload.
+  `gbrain files signed-url` generates 1-hour access links for private buckets.
+
+- **The full file migration lifecycle works end to end.** `mirror` uploads to
+  cloud and keeps local copies. `redirect` replaces local files with
+  `.redirect.yaml` pointers (verifies remote exists first, won't delete data).
+  `restore` downloads back from cloud. `clean` removes pointers when you're sure.
+  `status` shows where you are. Three states, zero data loss risk.
+
 - **Your brain now enforces its own graph integrity.** The Iron Law of Back-Linking
-  is now mandatory across all skills. Every mention of a person or company creates
-  a bidirectional link -- the new page points to the entity, AND the entity's page
-  points back. This was the single biggest pattern missing from v0.8.0, and it
-  transforms your brain from a flat file store into a traversable knowledge graph.
+  is mandatory across all skills. Every mention of a person or company creates
+  a bidirectional link. This transforms your brain from a flat file store into a
+  traversable knowledge graph.
 
-- **Filing rules prevent the #1 brain mistake.** New cross-cutting filing rules
-  (`skills/_brain-filing-rules.md`) stop the most common error: dumping everything
-  into `sources/`. Articles about people go in `people/`. Company research goes in
-  `companies/`. Reusable frameworks go in `concepts/`. Sources is for raw data only.
-  Every brain-writing skill now references these rules.
+- **Filing rules prevent the #1 brain mistake.** New `skills/_brain-filing-rules.md`
+  stops the most common error: dumping everything into `sources/`. File by primary
+  subject, not format. Includes notability gate and citation requirements.
 
-- **Your enrichment skill actually works now.** Rewritten from a 46-line API list to
-  a full 7-step protocol with 3-tier enrichment (scale effort to entity importance),
-  person page templates with real sections (What They Believe, What They're Building,
-  Trajectory, Hobby Horses), pluggable data source table, validation rules, and bulk
-  enrichment safety patterns.
+- **Enrichment protocol that actually works.** Rewritten from a 46-line API list to
+  a 7-step pipeline with 3-tier system, person/company page templates, pluggable
+  data sources, validation rules, and bulk enrichment safety.
 
-- **Ingest handles everything you throw at it.** Articles, videos, podcasts, PDFs,
-  screenshots, meeting transcripts, social media -- each with a complete workflow.
-  Video pages MUST link to raw transcripts. Meeting pages MUST propagate to entity
-  pages. Every fact MUST have a `[Source: ...]` citation. Raw sources preserved via
-  `.raw/` sidecars (< 100MB git) or `.redirect.yaml` pointers (>= 100MB cloud storage).
+- **Ingest handles everything.** Articles, videos, podcasts, PDFs, screenshots,
+  meeting transcripts, social media. Each with a workflow that uses real gbrain
+  commands (`upload-raw`, `signed-url`) instead of theoretical patterns.
 
-- **Citation requirements across all skills.** Every fact written to a brain page
-  must carry inline `[Source: ...]` citations. Three formats (direct attribution,
-  API/external, synthesis) with a source precedence hierarchy. Your agent can now
-  trace any claim back to its origin.
+- **Citation requirements across all skills.** Every fact needs inline
+  `[Source: ...]` citations. Three formats, source precedence hierarchy.
 
-- **Test Before Bulk saves you from yourself.** Codified operating principle: test
-  on 3-5 items, read actual output, fix the approach, THEN bulk execute. One bad
-  bulk run can write 100 mediocre pages that are harder to fix than to do right.
+- **Maintain skill catches what you missed.** Back-link enforcement, citation audit,
+  filing violations, file storage health checks, benchmark testing.
 
-- **Maintain skill catches what you missed.** New health dimensions: back-link
-  enforcement (find broken graph edges), citation audit (find uncited facts),
-  filing rule violations (find misfiled pages), and benchmark testing (verify
-  search quality hasn't regressed across 4 query difficulty tiers).
+- **Voice calls don't crash on em dashes anymore.** Unicode sanitization for Twilio
+  WebSocket, PII scrub, identity-first prompt, DIY STT+LLM+TTS pipeline option,
+  Smart VAD default, auto-upload call audio via `gbrain files upload-raw`.
 
-- **Voice calls don't crash on em dashes anymore.** Critical production fix:
-  non-ASCII characters (em dashes, smart quotes, arrows) in prompt context caused
-  broken surrogate pairs that silently killed Twilio WebSocket connections. Now
-  sanitized automatically. Also: PII scrub prevents the voice agent from reading
-  phone numbers and emails aloud.
-
-- **DIY voice pipeline option.** v2 architecture: Deepgram STT + Claude +
-  Cartesia/OpenAI TTS as an alternative to the OpenAI Realtime black box. Full
-  control over each pipeline stage. Streaming SSE with sentence-boundary TTS
-  dispatch, reconnect logic with backoff, keepalives, and Smart VAD (Silero) default.
-
-- **X-to-Brain gets eyes.** Tweet image OCR via vision models catches visual context
-  text-only collectors miss. Plus: real-time monitoring via Filtered Stream API
-  (seconds vs 30-min polling), 6-dimension tweet rating rubric with 60-min re-rating,
-  outbound tweet monitoring (60-second post-tweet engagement tracker), and automatic
-  X-to-Brain pipeline for entity propagation from tweet interactions.
+- **X-to-Brain gets eyes.** Image OCR, Filtered Stream real-time monitoring,
+  6-dimension tweet rating rubric, outbound tweet monitoring, cron staggering.
 
 ### Changed
 
-- **Enrich skill** rewritten from 46 lines to a full production protocol.
-- **Ingest skill** expanded with media workflows, filing rules, and citation
-  requirements.
-- **Maintain skill** expanded with 4 new health dimensions.
-- **Query skill** now propagates citations and includes search quality awareness.
-- **Briefing skill** now enforces back-linking and includes citation formatting.
-- **Voice recipe** bumped to v0.8.1 with critical production fixes.
-- **X-to-Brain recipe** bumped to v0.8.1 with OCR, real-time, and rating patterns.
-- Skills version bumped to 0.8.1 across manifest.json.
+- **Supabase Storage** now auto-selects upload method by file size: standard POST
+  for < 100 MB, TUS resumable for >= 100 MB. Signed URL generation for private
+  bucket access (1-hour expiry).
+- **File resolver** supports both `.redirect.yaml` (v0.9+) and legacy `.redirect`
+  (v0.8) formats for backward compatibility.
+- **Redirect format** upgraded from `.redirect` (5 fields) to `.redirect.yaml`
+  (10 fields: target, bucket, storage_path, size, size_human, hash, mime,
+  uploaded, source_url, type).
+- **All skills** updated to reference actual `gbrain files` commands instead of
+  theoretical patterns.
+- Skills version bumped to 0.9.0.
 
 ## [0.8.0] - 2026-04-11
 
