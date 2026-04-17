@@ -30,7 +30,9 @@
     "skills/enrich",
     "skills/briefing",
     "skills/migrate",
-    "skills/setup"
+    "skills/setup",
+    "skills/mep-sync",
+    "skills/session-patterns"
   ],
   "openclaw": {
     "compat": {
