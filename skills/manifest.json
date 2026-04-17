@@ -128,6 +128,16 @@
       "name": "data-research",
       "path": "data-research/SKILL.md",
       "description": "Structured data research: search, extract, archive, deduplicate, track. Parameterized YAML recipes for investor updates, donations, company metrics."
+    },
+    {
+      "name": "mep-sync",
+      "path": "mep-sync/SKILL.md",
+      "description": "Sync MEP Protocol handoffs with brain — distributed self-recursive learning"
+    },
+    {
+      "name": "session-patterns",
+      "path": "session-patterns/SKILL.md",
+      "description": "Detect recurring patterns across MEP sessions and surface insights"
     }
   ],
   "dependencies": {
