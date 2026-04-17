@@ -3,11 +3,15 @@
  * Each operation defines its schema, handler, and optional CLI hints.
  */
 
+import { lstatSync, realpathSync } from 'fs';
+import { resolve, relative, sep } from 'path';
 import type { BrainEngine } from './engine.ts';
+import { clampSearchLimit } from './engine.ts';
 import type { GBrainConfig } from './config.ts';
 import { importFromContent } from './import-file.ts';
 import { hybridSearch } from './search/hybrid.ts';
 import { expandQuery } from './search/expansion.ts';
+import { dedupResults } from './search/dedup.ts';
 import * as db from './db.ts';
 
 // --- Types ---
@@ -41,6 +45,95 @@ export class OperationError extends Error {
   }
 }
 
+// --- Upload validators (Fix 1 / B5 / H5 / M4) ---
+
+/**
+ * Validate an upload path. Two modes:
+ *   - strict (remote=true): confines the resolved path to `root` and rejects symlinks.
+ *     Used when the caller is untrusted (MCP over stdio/HTTP, agent-facing).
+ *   - loose (remote=false): only verifies the file exists and is not a symlink whose
+ *     target escapes the filesystem (no path traversal protection). Used for local CLI
+ *     where the user owns the filesystem.
+ *
+ * Either way: symlinks in the final component are always rejected (prevents
+ * transparent redirection to a different file than the user typed).
+ *
+ * @param filePath caller-supplied path
+ * @param root confinement root (only used when strict=true)
+ * @param strict true → enforce cwd confinement (B5 + H1). false → allow any accessible path.
+ * @throws OperationError(invalid_params) on symlink escape, traversal, or missing file
+ */
+export function validateUploadPath(filePath: string, root: string, strict = true): string {
+  let real: string;
+  try {
+    real = realpathSync(resolve(filePath));
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes('ENOENT')) {
+      throw new OperationError('invalid_params', `File not found: ${filePath}`);
+    }
+    throw new OperationError('invalid_params', `Cannot resolve path: ${filePath}`);
+  }
+  // Always reject final-component symlinks (basic safety for both modes).
+  try {
+    if (lstatSync(resolve(filePath)).isSymbolicLink()) {
+      throw new OperationError('invalid_params', `Symlinks are not allowed for upload: ${filePath}`);
+    }
+  } catch (e) {
+    if (e instanceof OperationError) throw e;
+    // lstat race with unlink — pass if realpath already succeeded.
+  }
+
+  if (!strict) return real;
+
+  // Strict mode: confine to root via realpath + path.relative (catches parent-dir symlinks per B5).
+  let realRoot: string;
+  try {
+    realRoot = realpathSync(root);
+  } catch {
+    throw new OperationError('invalid_params', `Confinement root not accessible: ${root}`);
+  }
+  const rel = relative(realRoot, real);
+  if (rel === '' || rel.startsWith('..') || rel.startsWith(`..${sep}`) || resolve(realRoot, rel) !== real) {
+    throw new OperationError('invalid_params', `Upload path must be within the working directory: ${filePath}`);
+  }
+  return real;
+}
+
+/**
+ * Allowlist validator for page slugs. Rejects URL-encoded traversal, backslashes,
+ * control chars, RTL overrides, Unicode lookalikes — anything outside the allowlist.
+ * Format: lowercase alphanumeric + hyphen segments separated by single forward slashes.
+ */
+export function validatePageSlug(slug: string): void {
+  if (typeof slug !== 'string' || slug.length === 0) {
+    throw new OperationError('invalid_params', 'page_slug must be a non-empty string');
+  }
+  if (slug.length > 255) {
+    throw new OperationError('invalid_params', 'page_slug exceeds 255 characters');
+  }
+  if (!/^[a-z0-9][a-z0-9\-]*(\/[a-z0-9][a-z0-9\-]*)*$/i.test(slug)) {
+    throw new OperationError('invalid_params', `Invalid page_slug: ${slug} (allowed: alphanumeric, hyphens, forward-slash separated segments)`);
+  }
+}
+
+/**
+ * Allowlist validator for uploaded file basenames. Rejects control chars, backslashes,
+ * RTL overrides (\u202E), leading dot (hidden files) and leading dash (CLI flag confusion).
+ * Allows extension dots and underscores. Max 255 chars.
+ */
+export function validateFilename(name: string): void {
+  if (typeof name !== 'string' || name.length === 0) {
+    throw new OperationError('invalid_params', 'Filename must be a non-empty string');
+  }
+  if (name.length > 255) {
+    throw new OperationError('invalid_params', 'Filename exceeds 255 characters');
+  }
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._\-]*$/.test(name)) {
+    throw new OperationError('invalid_params', `Invalid filename: ${name} (allowed: alphanumeric, dot, underscore, hyphen — no leading dot/dash, no control chars or backslash)`);
+  }
+}
+
 export interface ParamDef {
   type: 'string' | 'number' | 'boolean' | 'object' | 'array';
   required?: boolean;
@@ -61,6 +154,17 @@ export interface OperationContext {
   config: GBrainConfig;
   logger: Logger;
   dryRun: boolean;
+  /**
+   * True when the caller is remote/untrusted (MCP over stdio/HTTP, or any agent-facing entry point).
+   * False for local CLI invocations by the owner of the machine.
+   *
+   * Security-sensitive operations (e.g., file_upload) tighten their filesystem
+   * confinement when remote=true and allow unrestricted local-filesystem access
+   * when remote=false.
+   *
+   * When unset, operations MUST default to the stricter (remote=true) behavior.
+   */
+  remote?: boolean;
 }
 
 export interface Operation {
@@ -156,7 +260,7 @@ const list_pages: Operation = {
     const pages = await ctx.engine.listPages({
       type: p.type as any,
       tag: p.tag as string,
-      limit: (p.limit as number) || 50,
+      limit: clampSearchLimit(p.limit as number | undefined, 50, 100),
     });
     return pages.map(pg => ({
       slug: pg.slug,
@@ -176,9 +280,14 @@ const search: Operation = {
   params: {
     query: { type: 'string', required: true },
     limit: { type: 'number', description: 'Max results (default 20)' },
+    offset: { type: 'number', description: 'Skip first N results (for pagination)' },
   },
   handler: async (ctx, p) => {
-    return ctx.engine.searchKeyword(p.query as string, { limit: (p.limit as number) || 20 });
+    const results = await ctx.engine.searchKeyword(p.query as string, {
+      limit: (p.limit as number) || 20,
+      offset: (p.offset as number) || 0,
+    });
+    return dedupResults(results);
   },
   cliHints: { name: 'search', positional: ['query'] },
 };
@@ -189,14 +298,19 @@ const query: Operation = {
   params: {
     query: { type: 'string', required: true },
     limit: { type: 'number', description: 'Max results (default 20)' },
+    offset: { type: 'number', description: 'Skip first N results (for pagination)' },
     expand: { type: 'boolean', description: 'Enable multi-query expansion (default: true)' },
+    detail: { type: 'string', description: 'Result detail level: low (compiled truth only), medium (default, all with dedup), high (all chunks)' },
   },
   handler: async (ctx, p) => {
     const expand = p.expand !== false;
+    const detail = (p.detail as 'low' | 'medium' | 'high') || undefined;
     return hybridSearch(ctx.engine, p.query as string, {
       limit: (p.limit as number) || 20,
+      offset: (p.offset as number) || 0,
       expansion: expand,
       expandFn: expand ? expandQuery : undefined,
+      detail,
     });
   },
   cliHints: { name: 'query', positional: ['query'] },
@@ -435,7 +549,7 @@ const sync_brain: Operation = {
       full: (p.full as boolean) || false,
     });
   },
-  cliHints: { name: 'sync' },
+  cliHints: { name: 'sync', hidden: true },
 };
 
 // --- Raw Data ---
@@ -523,11 +637,16 @@ const get_ingest_log: Operation = {
     limit: { type: 'number', description: 'Max entries (default 20)' },
   },
   handler: async (ctx, p) => {
-    return ctx.engine.getIngestLog({ limit: (p.limit as number) || 20 });
+    return ctx.engine.getIngestLog({ limit: clampSearchLimit(p.limit as number | undefined, 20, 50) });
   },
 };
 
 // --- File Operations ---
+
+// Both branches need a LIMIT. Without one, the slug-filtered branch materializes
+// every file for that slug — an MCP caller can force unbounded memory consumption
+// by targeting a page with many attachments.
+const FILE_LIST_LIMIT = 100;
 
 const file_list: Operation = {
   name: 'file_list',
@@ -539,9 +658,9 @@ const file_list: Operation = {
     const sql = db.getConnection();
     const slug = p.slug as string | undefined;
     if (slug) {
-      return sql`SELECT id, page_slug, filename, storage_path, mime_type, size_bytes, content_hash, created_at FROM files WHERE page_slug = ${slug} ORDER BY filename`;
+      return sql`SELECT id, page_slug, filename, storage_path, mime_type, size_bytes, content_hash, created_at FROM files WHERE page_slug = ${slug} ORDER BY filename LIMIT ${FILE_LIST_LIMIT}`;
     }
-    return sql`SELECT id, page_slug, filename, storage_path, mime_type, size_bytes, content_hash, created_at FROM files ORDER BY page_slug, filename LIMIT 100`;
+    return sql`SELECT id, page_slug, filename, storage_path, mime_type, size_bytes, content_hash, created_at FROM files ORDER BY page_slug, filename LIMIT ${FILE_LIST_LIMIT}`;
   },
 };
 
@@ -562,10 +681,20 @@ const file_upload: Operation = {
 
     const filePath = p.path as string;
     const pageSlug = (p.page_slug as string) || null;
+
+    // Fix 1 / B5 / H5 / M4: validate path, slug, filename before any filesystem read.
+    // Remote callers (MCP, agent) are confined to cwd (strict). Local CLI callers
+    // can upload from anywhere on the filesystem (loose) — the user owns the machine.
+    // Default is strict when ctx.remote is undefined (defense-in-depth).
+    const strict = ctx.remote !== false;
+    validateUploadPath(filePath, process.cwd(), strict);
+    if (pageSlug) validatePageSlug(pageSlug);
+    const filename = basename(filePath);
+    validateFilename(filename);
+
     const stat = statSync(filePath);
     const content = readFileSync(filePath);
     const hash = createHash('sha256').update(content).digest('hex');
-    const filename = basename(filePath);
     const storagePath = pageSlug ? `${pageSlug}/${filename}` : `unsorted/${hash.slice(0, 8)}-${filename}`;
 
     const MIME_TYPES: Record<string, string> = {

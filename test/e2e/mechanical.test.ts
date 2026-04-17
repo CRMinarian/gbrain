@@ -24,12 +24,14 @@ import { importFromContent } from '../../src/core/import-file.ts';
 const skip = !hasDatabase();
 const describeE2E = skip ? describe.skip : describe;
 
-function makeCtx(): OperationContext {
+function makeCtx(opts: { remote?: boolean } = {}): OperationContext {
   return {
     engine: getEngine(),
     config: { engine: 'postgres', database_url: process.env.DATABASE_URL! },
     logger: { info: () => {}, warn: () => {}, error: () => {} },
     dryRun: false,
+    // Default: trusted local invocation (matches `gbrain call` semantics).
+    remote: opts.remote ?? false,
   };
 }
 
@@ -455,6 +457,78 @@ describeE2E('E2E: Files', () => {
     } finally {
       rmSync(tmpDir, { recursive: true });
     }
+  });
+
+  // Security-wave-3 regression: MCP/remote callers MUST be confined to cwd
+  // (Issue #139). Local CLI callers are unrestricted — different trust model.
+  test('file_upload rejects outside-cwd paths for remote (MCP) callers', async () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'gbrain-e2e-ssrf-'));
+    const tmpFile = join(tmpDir, 'stealable.txt');
+    writeFileSync(tmpFile, 'sensitive');
+
+    try {
+      const op = operationsByName['file_upload'];
+      let threw = false;
+      try {
+        await op.handler(makeCtx({ remote: true }), {
+          path: tmpFile,
+          page_slug: 'people/sarah-chen',
+        });
+      } catch (e: any) {
+        threw = true;
+        expect(String(e.message || e)).toMatch(/within the working directory/i);
+      }
+      expect(threw).toBe(true);
+    } finally {
+      rmSync(tmpDir, { recursive: true });
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// Security: Query Bounds
+// ─────────────────────────────────────────────────────────────────
+
+describeE2E('E2E: file_list LIMIT enforcement', () => {
+  beforeAll(async () => {
+    await setupDB();
+  });
+  afterAll(teardownDB);
+
+  test('file_list with slug filter respects LIMIT 100', async () => {
+    const sql = getConn();
+    const testSlug = 'test-limit-slug';
+
+    // Create the parent page first (FK constraint on files.page_slug)
+    await sql`
+      INSERT INTO pages (slug, title, type, compiled_truth, frontmatter)
+      VALUES (${testSlug}, ${'Test Limit Page'}, ${'note'}, ${'body'}, ${'{}'}::jsonb)
+      ON CONFLICT (slug) DO NOTHING
+    `;
+
+    // Insert 150 file rows for the same slug
+    for (let i = 0; i < 150; i++) {
+      await sql`
+        INSERT INTO files (page_slug, filename, storage_path, mime_type, size_bytes, content_hash, metadata)
+        VALUES (${testSlug}, ${'file-' + String(i).padStart(3, '0') + '.txt'}, ${testSlug + '/file-' + i + '.txt'}, ${'text/plain'}, ${100}, ${'hash-' + i}, ${'{}'}::jsonb)
+        ON CONFLICT (storage_path) DO NOTHING
+      `;
+    }
+
+    // Verify we inserted 150
+    const count = await sql`SELECT count(*) as cnt FROM files WHERE page_slug = ${testSlug}`;
+    expect(Number(count[0].cnt)).toBe(150);
+
+    // Call file_list with slug — should return at most 100
+    const files = await callOp('file_list', { slug: testSlug }) as any[];
+    expect(files.length).toBeLessThanOrEqual(100);
+    expect(files.length).toBe(100);
+  });
+
+  test('file_list without slug also respects LIMIT 100', async () => {
+    // The 150 rows from the previous test are still in the DB
+    const files = await callOp('file_list', {}) as any[];
+    expect(files.length).toBeLessThanOrEqual(100);
   });
 });
 
