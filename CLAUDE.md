@@ -1,5 +1,44 @@
 # CLAUDE.md
 
+## MEP Protocol (Mandatory)
+
+This repo uses the [MEP Protocol](https://github.com/NukaSoft/mep-protocol) for
+cross-session context relay. The handoff file is `handoff.md` at the repo root.
+
+**On session start (BEFORE any other work):**
+1. `git pull` to get the latest handoff
+2. Read `handoff.md` — parse the newest entry for current state, pending tasks, and warnings
+3. Orient your work based on what's pending and what to watch out for
+
+**On session end (BEFORE signing off — triggers: `/eol`, `done`, `eol`, `ship it`):**
+1. Write a new entry at the TOP of `handoff.md` (newest-first rule)
+2. Use the v2 header format: `## YYYY-MM-DD — Claude | Claude (Code) | <session-type>`
+3. Include all three sections: `### What happened`, `### What's pending`, `### Watch out for`
+4. `git add handoff.md && git commit -m "mep: session handoff" && git push`
+
+**Entry format (v2 schema):**
+```markdown
+## YYYY-MM-DD — Agent | Platform | session-type
+**Tag-in:** HH:MM TZ | **Tag-out:** HH:MM TZ
+
+### What happened
+- Bullet list of deliverables and decisions (not process)
+
+### What's pending
+- [ ] Actionable tasks with owners
+
+### Watch out for
+- Traps, blockers, stale state
+```
+
+**Rules:**
+- Newest entry ALWAYS on top
+- Never overwrite previous entries
+- Decisions get a "why" not just a "what"
+- Tag tasks with owners when multiple agents are involved
+
+---
+
 GBrain is a personal knowledge brain and GStack mod for agent platforms. Pluggable
 engines: PGLite (embedded Postgres via WASM, zero-config default) or Postgres + pgvector
 + hybrid search in a managed Supabase instance. `gbrain init` defaults to PGLite;
