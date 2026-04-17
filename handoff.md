@@ -26,6 +26,35 @@ Context relay between sessions. Newest first. Read before working, write before 
 - **No CI on this repo.** Don't assume tests ran. Before merging, desktop should run `bun test` (and ideally `bun run test:e2e` per CLAUDE.md's test DB lifecycle).
 - **mep-sync skill is not yet functional** — it's a spec, not an implementation. Future sessions still need to write handoffs manually until the skill's hooks are wired into gbrain itself.
 
+---
+
+## 2026-04-17 — Claude | Claude (Code, Cloud) | code
+**Tag-in:** session start | **Tag-out:** EOL
+
+### What happened
+- MEP Protocol handshake completed between cloud and desktop Claude Code instances
+- Human relayed handoff prompt as meat-puppet; desktop synced to 6ac4acc, all 6 files verified
+- Desktop rewired remotes: `origin` = CRMinarian/gbrain (fork), `upstream` = garrytan/gbrain
+- Desktop backed up divergent Turo recipe (725-line diff) to `.desktop-backup`
+- Confirmed PR #2 description inaccuracy: says "4 skills" but diff has 2 skills + 2 recipes
+- Verified fork master (91ced66) is far behind upstream (7bbfc3e, PR #174) — rebase needed before merge
+
+### What's pending
+- [ ] Fast-forward fork master to upstream 7bbfc3e, then rebase `claude/add-office-hours-iW7t8` on top
+- [ ] Reconcile Turo recipe: desktop has 725-line version at `recipes/turo-booking-agent.md.desktop-backup`
+- [ ] Fix PR #2 description: "4 self-recursive learning skills" → "2 skills + 2 recipes"
+- [ ] PR #2 awaiting review — no CI configured
+- [ ] Align `skills/mep-sync/SKILL.md` with NukaSoft spec
+- [ ] Session-patterns skill needs real session data
+
+### Watch out for
+- Fork master is ~80+ commits behind upstream — PR #2 targets stale base
+- Desktop has local Turo recipe backup that must be reconciled before any recipe work
+- No CI on repo — run `bun test` and E2E manually before merge
+- `.env.testing` may be missing — check sibling worktrees
+
+---
+
 ## 2026-04-17 — Claude | Claude (Code) | code
 **Tag-in:** session start | **Tag-out:** active
 
