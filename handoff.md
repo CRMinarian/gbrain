@@ -2,6 +2,30 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-04-17 — Skippy | Claude (Code) | ssh-audit + rotation
+**Tag-in:** delegated from prior handoff (@Skippy Pierre-Alithya SSH audit) | **Tag-out:** client-side rotation complete, GitHub-side pending
+
+### What happened
+- Audited every dependency on the dead `Pierre-Alithya` SSH identity across `~/.ssh/`, launchd, crontab, `~/Dev/*`, `~/Documents/*`, `~/aly-fs-weather`, `~/FieldService`, gh CLI, and Actions workflows. Full report filed at `skippy-brain:machines/macbook/ssh-identity-audit-2026-04-17.md` (commit `f7628c5` on `main`).
+- **Rewrote `~/.ssh/config`**: default `Host github.com` + `Host github-nukasoft` both now point at `id_ed25519_crminarian` with `IdentitiesOnly yes`. `ssh -T git@github.com` confirmed → `Hi CRMinarian!`. **Why:** prior default routed to the dead Pierre-Alithya key, so any `git@github.com:...` remote silently auth'd as the wrong user.
+- **`gh config set git_protocol https -h github.com`** — closes the latent trap where `gh repo clone` would pick an SSH URL and fall through to the dead key.
+- **Stripped embedded OAuth token** from `~/Dev/skippy-brain` remote URL (`https://gho_Irc2Sp…@github.com/...` → bare HTTPS). Token was in plaintext `.git/config`. **Why:** filesystem-readable secret; also survives terminal screenshares.
+- Verified `git fetch --dry-run` on all 6 working repos (Gbrain, nukasoft.ai, skippy-brain, FieldService, MacBook.Local.Skippy, Pierre_Brain1).
+- **No new SSH key generated** — `id_ed25519_crminarian` already existed and was already on CRMinarian's GitHub account. Correction to the original task: simpler than "rotate to a new key," the fix was "repoint the default identity at the live key already on disk."
+
+### What's pending
+- [ ] @Pierre: run `gh auth refresh -h github.com -s admin:public_key -s admin:ssh_signing_key` so a follow-up Skippy session can enumerate and `gh ssh-key delete` the Pierre-Alithya public key from GitHub.
+- [ ] @Pierre: decide what to do with `~/aly-fs-weather` — remote `github.com/Pierre-Alithya/aly-fs-weather.git` returns 404 (account is deleted, repo is gone with it). Recover from backup / re-host under CRMinarian / delete local clone.
+- [ ] @Pierre: revoke the `gho_Irc2Sp<REDACTED>` token that was embedded in skippy-brain's remote (GitHub → Settings → Developer Settings → Personal access tokens). May still be live.
+- [ ] @Pierre: manually check in GitHub UI whether any repo has **Deploy keys** with the Pierre-Alithya fingerprint — `gh` token lacks `admin:org` scope to enumerate org-wide.
+- [ ] @Skippy (follow-up session): after scope refresh, delete Pierre-Alithya public key from github.com and close the loop in the audit report.
+
+### Watch out for
+- **`~/.ssh/id_ed25519` (Pierre-Alithya private key) is still on disk on purpose** — `Host hotrod` (192.168.0.220 LAN Ubuntu) uses it for non-GitHub auth. Don't delete the file. Only revoke the public key on github.com.
+- **`github-nukasoft` SSH alias still used** by `~/Dev/nukasoft.ai` and `~/Documents/MacBook.Local.Skippy` remotes (hardcoded to `git@github-nukasoft:NukaSoft/...`). Alias now resolves to the crminarian key, so those still work — don't remove the alias block from `~/.ssh/config`.
+- **`~/aly-fs-weather` is silently dead.** `.github/workflows/export-solution.yml` doesn't run anywhere anymore. Pushes have been silently failing. If Pierre cares about this repo's history, recover before deleting.
+- **Do not embed OAuth tokens in git remote URLs.** The osxkeychain + `gh auth git-credential` helper in `~/.gitconfig` handles HTTPS auth cleanly without plaintext secrets in `.git/config`.
+
 ## 2026-04-17 — Claude | Claude (Code desktop) | rebase + sync
 **Tag-in:** received phone handoff | **Tag-out:** PR #2 mergeable, awaiting review decision
 
