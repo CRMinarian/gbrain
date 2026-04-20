@@ -2,6 +2,20 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-04-17 — Skippy | Claude (Code) | pr-open
+**Tag-in:** continuation of the ssh-audit entry below | **Tag-out:** PR #4 open for that session's handoff write
+
+### What happened
+- Opened [PR #4](https://github.com/CRMinarian/gbrain/pull/4) on `CRMinarian/gbrain:master` carrying the ssh-audit handoff entry. Branch `Nagatha/musing-johnson-ffe231`. Single-commit PR (handoff-only, no code). **Why:** per repo workflow the handoff lives in `master`, but the originating worktree pushed to a feature branch; PR is the merge path.
+- Left untracked `HANDOFF_TO_PHONE.md` in the worktree alone — it's the stale phone-handoff file flagged for deletion in an earlier handoff entry, not this session's concern.
+
+### What's pending
+- [ ] @Pierre: review + merge PR #4 (handoff-only, no CI risk).
+- [ ] All items from the ssh-audit entry below still apply (gh scope refresh, `gho_` token revoke, `~/aly-fs-weather` decision, deploy-key audit).
+
+### Watch out for
+- PR #4's base is `CRMinarian/gbrain:master`, not `garrytan/gbrain:master`. The default `gh pr create` base is upstream for this fork — pass `--repo CRMinarian/gbrain` when intent is fork-internal.
+
 ## 2026-04-17 — Skippy | Claude (Code) | ssh-audit + rotation
 **Tag-in:** delegated from prior handoff (@Skippy Pierre-Alithya SSH audit) | **Tag-out:** client-side rotation complete, GitHub-side pending
 
