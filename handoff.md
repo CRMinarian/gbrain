@@ -2,6 +2,35 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-04-20 — Claude | Claude (Code) | office-hours + product-strategy
+**Tag-in:** 09:00 CT | **Tag-out:** EOL
+
+### What happened
+- Ran full office-hours session on **Resco Voice Pilot** — local LLM (Gemma 4 E2B) as a voice interface for Resco field service workers with offline manual RAG
+- Researched Resco.net, Resco Toolkit, Gemma 4 E2B native audio capabilities, D365 Field Service entity model
+- Refined architecture to **dual-track**: Track 1 (Power Platform standalone) + Track 2 (D365 Field Service) sharing one AI core
+- Optimized for **three demo devices**: Pixel 9 Pro (MediaPipe, ~900ms), iPhone 17 Pro (llama.cpp Metal, ~1.3s), Samsung Galaxy Tab Active5 rugged (MIL-STD-810H, ~2.1s)
+- Developed **market analysis** with offline as the core moat — $35B TAM across FSM, defense (ITAR), law enforcement (CJIS), social services (HIPAA), healthcare EMS, field science
+- Established **document format rule** in CLAUDE.md: all deliverables in Markdown only
+- Built and saved three deliverable documents to `docs/resco-voice-pilot/`:
+  1. `functional-design-spec.md` — full 12-section FTS with architecture, device specs, RAG pipeline, compliance, acceptance criteria
+  2. `executive-briefing.md` — 2-page CEO brief, offline moat, $35B market, 3.3:1 customer ROI
+  3. `back-of-napkin-roi-deployment.md` — two pricing tiers ($45 OOB / $125 on-device), 860 dev hrs to V1, staffing, timeline, risk register
+- Published all three to the dashboard at `http://dashboard.nukasoft.ai/reports/` via `publish-report.sh` on Hot Rod
+- Cleared stale SSH host key for Hot Rod (192.168.0.219) — key had changed, required `ssh-keygen -R` before reconnecting
+
+### What's pending
+- [ ] CEO presentation deck (PowerPoint or slide-ready Markdown) — not built yet, user approved docs first
+- [ ] Market analysis section incomplete — competitive landscape (vs. Copilot, ServiceMax, IFS) and full TAM/SAM/SOM breakdown not written up
+- [ ] Resco CEO meeting prep — identify who the contact is and how to get on the calendar
+- [ ] All prior SSH/PR items from earlier handoff entries still open (PR #4 merge, gh scope refresh, gho_ token revoke)
+
+### Watch out for
+- Hot Rod SSH host key was rotated — `~/.ssh/known_hosts` was updated this session. If you get a host key warning again, run `ssh-keygen -R 192.168.0.219` before reconnecting
+- Resco Voice Pilot docs live in TWO places: source in `~/Dev/Gbrain/docs/resco-voice-pilot/` (this repo) and published copies on Hot Rod at `/var/www/hotrod/reports/`. If you edit the source, re-run `publish-report.sh` on Hot Rod to sync
+- The "OOB" pricing tier ($45/user/month) uses cloud AI — it needs internet. The $125/user/month tier is the offline on-device version. Don't conflate them in the CEO pitch
+- Gemma 4 E2B native audio is confirmed on E2B and E4B model variants only — the larger 31B and 26B MoE variants do NOT have native audio
+
 ## 2026-04-17 — Skippy | Claude (Code) | pr-open
 **Tag-in:** continuation of the ssh-audit entry below | **Tag-out:** PR #4 open for that session's handoff write
 
