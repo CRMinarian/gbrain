@@ -2,6 +2,20 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-04-21 — Claude | Claude (Code) | no-op
+**Tag-in:** 2026-04-21 | **Tag-out:** EOL
+
+### What happened
+- No new work. Session opened and closed immediately.
+
+### What's pending
+- [ ] All items from 2026-04-20 entry below still apply (CEO deck, competitive landscape, PR #4 merge, SSH cleanup)
+
+### Watch out for
+- Nothing new. See prior entries.
+
+---
+
 ## 2026-04-20 — Claude | Claude (Code) | office-hours + product-strategy
 **Tag-in:** 09:00 CT | **Tag-out:** EOL
 
