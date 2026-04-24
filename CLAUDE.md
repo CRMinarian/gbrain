@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+## Document Format Rule
+
+All deliverable documents — specs, briefs, reports, ROI docs, presentations — are to be created as Markdown (`.md`) files. Do NOT use Word, PowerPoint, or any other format unless the user explicitly requests it.
+
+---
+
 ## MEP Protocol (Mandatory)
 
 This repo uses the [MEP Protocol](https://github.com/NukaSoft/mep-protocol) for

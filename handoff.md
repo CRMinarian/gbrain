@@ -2,6 +2,49 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-04-21 — Claude | Claude (Code) | no-op
+**Tag-in:** 2026-04-21 | **Tag-out:** EOL
+
+### What happened
+- No new work. Session opened and closed immediately.
+
+### What's pending
+- [ ] All items from 2026-04-20 entry below still apply (CEO deck, competitive landscape, PR #4 merge, SSH cleanup)
+
+### Watch out for
+- Nothing new. See prior entries.
+
+---
+
+## 2026-04-20 — Claude | Claude (Code) | office-hours + product-strategy
+**Tag-in:** 09:00 CT | **Tag-out:** EOL
+
+### What happened
+- Ran full office-hours session on **Resco Voice Pilot** — local LLM (Gemma 4 E2B) as a voice interface for Resco field service workers with offline manual RAG
+- Researched Resco.net, Resco Toolkit, Gemma 4 E2B native audio capabilities, D365 Field Service entity model
+- Refined architecture to **dual-track**: Track 1 (Power Platform standalone) + Track 2 (D365 Field Service) sharing one AI core
+- Optimized for **three demo devices**: Pixel 9 Pro (MediaPipe, ~900ms), iPhone 17 Pro (llama.cpp Metal, ~1.3s), Samsung Galaxy Tab Active5 rugged (MIL-STD-810H, ~2.1s)
+- Developed **market analysis** with offline as the core moat — $35B TAM across FSM, defense (ITAR), law enforcement (CJIS), social services (HIPAA), healthcare EMS, field science
+- Established **document format rule** in CLAUDE.md: all deliverables in Markdown only
+- Built and saved three deliverable documents to `docs/resco-voice-pilot/`:
+  1. `functional-design-spec.md` — full 12-section FTS with architecture, device specs, RAG pipeline, compliance, acceptance criteria
+  2. `executive-briefing.md` — 2-page CEO brief, offline moat, $35B market, 3.3:1 customer ROI
+  3. `back-of-napkin-roi-deployment.md` — two pricing tiers ($45 OOB / $125 on-device), 860 dev hrs to V1, staffing, timeline, risk register
+- Published all three to the dashboard at `http://dashboard.nukasoft.ai/reports/` via `publish-report.sh` on Hot Rod
+- Cleared stale SSH host key for Hot Rod (192.168.0.219) — key had changed, required `ssh-keygen -R` before reconnecting
+
+### What's pending
+- [ ] CEO presentation deck (PowerPoint or slide-ready Markdown) — not built yet, user approved docs first
+- [ ] Market analysis section incomplete — competitive landscape (vs. Copilot, ServiceMax, IFS) and full TAM/SAM/SOM breakdown not written up
+- [ ] Resco CEO meeting prep — identify who the contact is and how to get on the calendar
+- [ ] All prior SSH/PR items from earlier handoff entries still open (PR #4 merge, gh scope refresh, gho_ token revoke)
+
+### Watch out for
+- Hot Rod SSH host key was rotated — `~/.ssh/known_hosts` was updated this session. If you get a host key warning again, run `ssh-keygen -R 192.168.0.219` before reconnecting
+- Resco Voice Pilot docs live in TWO places: source in `~/Dev/Gbrain/docs/resco-voice-pilot/` (this repo) and published copies on Hot Rod at `/var/www/hotrod/reports/`. If you edit the source, re-run `publish-report.sh` on Hot Rod to sync
+- The "OOB" pricing tier ($45/user/month) uses cloud AI — it needs internet. The $125/user/month tier is the offline on-device version. Don't conflate them in the CEO pitch
+- Gemma 4 E2B native audio is confirmed on E2B and E4B model variants only — the larger 31B and 26B MoE variants do NOT have native audio
+
 ## 2026-04-20 — Claude | Claude (Code desktop, MBP) | split + scrub + EOL
 **Tag-in:** continuing 04-17 session | **Tag-out:** EOL — handing to Hot Rod
 
@@ -36,6 +79,43 @@ Context relay between sessions. Newest first. Read before working, write before 
 
 ---
 
+## 2026-04-17 — Skippy | Claude (Code) | pr-open
+**Tag-in:** continuation of the ssh-audit entry below | **Tag-out:** PR #4 open for that session's handoff write
+
+### What happened
+- Opened [PR #4](https://github.com/CRMinarian/gbrain/pull/4) on `CRMinarian/gbrain:master` carrying the ssh-audit handoff entry. Branch `Nagatha/musing-johnson-ffe231`. Single-commit PR (handoff-only, no code). **Why:** per repo workflow the handoff lives in `master`, but the originating worktree pushed to a feature branch; PR is the merge path.
+- Left untracked `HANDOFF_TO_PHONE.md` in the worktree alone — it's the stale phone-handoff file flagged for deletion in an earlier handoff entry, not this session's concern.
+
+### What's pending
+- [ ] @Pierre: review + merge PR #4 (handoff-only, no CI risk).
+- [ ] All items from the ssh-audit entry below still apply (gh scope refresh, `gho_` token revoke, `~/aly-fs-weather` decision, deploy-key audit).
+
+### Watch out for
+- PR #4's base is `CRMinarian/gbrain:master`, not `garrytan/gbrain:master`. The default `gh pr create` base is upstream for this fork — pass `--repo CRMinarian/gbrain` when intent is fork-internal.
+
+## 2026-04-17 — Skippy | Claude (Code) | ssh-audit + rotation
+**Tag-in:** delegated from prior handoff (@Skippy Pierre-Alithya SSH audit) | **Tag-out:** client-side rotation complete, GitHub-side pending
+
+### What happened
+- Audited every dependency on the dead `Pierre-Alithya` SSH identity across `~/.ssh/`, launchd, crontab, `~/Dev/*`, `~/Documents/*`, `~/aly-fs-weather`, `~/FieldService`, gh CLI, and Actions workflows. Full report filed at `skippy-brain:machines/macbook/ssh-identity-audit-2026-04-17.md` (commit `f7628c5` on `main`).
+- **Rewrote `~/.ssh/config`**: default `Host github.com` + `Host github-nukasoft` both now point at `id_ed25519_crminarian` with `IdentitiesOnly yes`. `ssh -T git@github.com` confirmed → `Hi CRMinarian!`. **Why:** prior default routed to the dead Pierre-Alithya key, so any `git@github.com:...` remote silently auth'd as the wrong user.
+- **`gh config set git_protocol https -h github.com`** — closes the latent trap where `gh repo clone` would pick an SSH URL and fall through to the dead key.
+- **Stripped embedded OAuth token** from `~/Dev/skippy-brain` remote URL (`https://gho_Irc2Sp…@github.com/...` → bare HTTPS). Token was in plaintext `.git/config`. **Why:** filesystem-readable secret; also survives terminal screenshares.
+- Verified `git fetch --dry-run` on all 6 working repos (Gbrain, nukasoft.ai, skippy-brain, FieldService, MacBook.Local.Skippy, Pierre_Brain1).
+- **No new SSH key generated** — `id_ed25519_crminarian` already existed and was already on CRMinarian's GitHub account. Correction to the original task: simpler than "rotate to a new key," the fix was "repoint the default identity at the live key already on disk."
+
+### What's pending
+- [ ] @Pierre: run `gh auth refresh -h github.com -s admin:public_key -s admin:ssh_signing_key` so a follow-up Skippy session can enumerate and `gh ssh-key delete` the Pierre-Alithya public key from GitHub.
+- [ ] @Pierre: decide what to do with `~/aly-fs-weather` — remote `github.com/Pierre-Alithya/aly-fs-weather.git` returns 404 (account is deleted, repo is gone with it). Recover from backup / re-host under CRMinarian / delete local clone.
+- [ ] @Pierre: revoke the `gho_Irc2Sp<REDACTED>` token that was embedded in skippy-brain's remote (GitHub → Settings → Developer Settings → Personal access tokens). May still be live.
+- [ ] @Pierre: manually check in GitHub UI whether any repo has **Deploy keys** with the Pierre-Alithya fingerprint — `gh` token lacks `admin:org` scope to enumerate org-wide.
+- [ ] @Skippy (follow-up session): after scope refresh, delete Pierre-Alithya public key from github.com and close the loop in the audit report.
+
+### Watch out for
+- **`~/.ssh/id_ed25519` (Pierre-Alithya private key) is still on disk on purpose** — `Host hotrod` (192.168.0.220 LAN Ubuntu) uses it for non-GitHub auth. Don't delete the file. Only revoke the public key on github.com.
+- **`github-nukasoft` SSH alias still used** by `~/Dev/nukasoft.ai` and `~/Documents/MacBook.Local.Skippy` remotes (hardcoded to `git@github-nukasoft:NukaSoft/...`). Alias now resolves to the crminarian key, so those still work — don't remove the alias block from `~/.ssh/config`.
+- **`~/aly-fs-weather` is silently dead.** `.github/workflows/export-solution.yml` doesn't run anywhere anymore. Pushes have been silently failing. If Pierre cares about this repo's history, recover before deleting.
+- **Do not embed OAuth tokens in git remote URLs.** The osxkeychain + `gh auth git-credential` helper in `~/.gitconfig` handles HTTPS auth cleanly without plaintext secrets in `.git/config`.
 ## 2026-04-17 — Claude | Claude (Code desktop) | rebase + sync
 **Tag-in:** received phone handoff | **Tag-out:** PR #2 mergeable, awaiting review decision
 
