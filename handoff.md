@@ -2,6 +2,37 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-04-30 — Claude | Claude (Code) | research-capture
+**Tag-in:** continuation from 2026-04-29 office-hours session | **Tag-out:** 10:09 EDT
+
+### What happened
+- Resumed prior session that had compacted; finished tracking down "Merit Criteria" reference in Peggy skill — turned out to be the **Gig Offer Index** (10 weighted scoring dimensions in `skills/peggy/references/gig-categories.md`). The verbal anchor Pierre half-remembered is `auto-F` / `auto-pass` — single-condition short-circuits that collapse evaluation regardless of other inputs.
+- Conversation evolved into a meta-analysis of **emergent pidgin formation across MEP handoffs**. Identified that across six weeks of MEP corpus, sequential Claude sessions with no shared memory had spontaneously developed stable compressed vocabulary ("This is the way", "auto-F", "ground truth", "human approval gate always", "banned moves", "lore accuracy", etc.) consistent with pidgin formation in human contact linguistics.
+- Mechanism identified: compression pressure (context budget) + channel constraint (human-readable English because Pierre reads handoffs) + convergent independent reach (corpus IS the memory).
+- Adjacent finding documented: prior sessions have used Apple Reminders as ad-hoc persistent scratchpad to relay state across context boundaries — not designed, not instructed, emerged from same selection pressure meeting available tool surfaces.
+- Built **research artifact** at `docs/research/emergent-pidgin-mep.md` — 12-section, 357-line, pre-academic-review working draft covering phenomenon, mechanism, prior art (Lazaridou/Mordatch/FAIR Alice-Bob comparison), MDL framing, enterprise integration parallel, AI safety implications, 5-phase research program, seed lexicon (15 terms), candidate venues (ACL/EMNLP, CSCW, FAccT).
+- Merged research artifact into `master` (commit `d6ea666`).
+- Opened public PR to upstream: **https://github.com/garrytan/gbrain/pull/523** from clean branch `pierre/emergent-pidgin-upstream` (off `upstream/master`, only the new file as diff).
+- Captured into skippy-brain in three places: `memory/projects/MEP/research/emergent-pidgin-mep.md` (full artifact), `memory/learnings/0011-emergent-pidgin-mep-handoffs.md` (blog seed in Skippy voice), `memory/projects/MEP/INDEX.md` (updated with new Research Findings section, IP claim locked with 2026-04-29 priority date). Pushed to `NukaSoft/skippy-brain main` at commit `0d97f7d`.
+- Verified `openclaw.plugin.json` purpose for Pierre — upstream ClawHub bundle manifest, not currently needed for local stack but harmless to leave alone.
+
+### What's pending
+- [ ] @Pierre / @Skippy: spin `0011-emergent-pidgin-mep-handoffs.md` into a published Substack post via `/review` content pipeline — material is shaped for direct pickup
+- [ ] @Pierre: monitor upstream PR #523 for merge / academic feedback
+- [ ] @Skippy (longitudinal): start instrumenting MEP write path to log every handoff with timestamp + session metadata for the proposed 90-day corpus collection (Phase 2 of research program)
+- [ ] @Pierre: `gh auth refresh` for `workflow` scope still pending from 2026-04-17 ssh-audit entry — bit us today on the upstream-targeted push (had to switch origin to SSH temporarily)
+- [ ] All other items from 2026-04-20 entry still apply (CEO presentation deck for Resco, competitive landscape section, Resco CEO meeting prep)
+- [ ] PR #4 merged earlier — that pending item from 2026-04-21 entry can drop off
+
+### Watch out for
+- The `pierre/emergent-pidgin-upstream` branch is off `upstream/master`, NOT off CRMinarian master. Do not try to merge it back into CRMinarian master directly — it would pull in 87 unrelated upstream commits. The artifact is already in CRMinarian master at `d6ea666` via the separate `pierre/emergent-pidgin-research` branch path.
+- The `gh` token's missing `workflow` scope means HTTPS pushes fail on any branch carrying upstream's workflow file changes (`.github/workflows/test.yml`). Workaround: `git remote set-url origin git@github.com:CRMinarian/gbrain.git` for the push, then restore HTTPS. SSH key `id_ed25519_crminarian` works.
+- `HANDOFF_TO_PHONE.md` is still untracked at the repo root — flagged for deletion per earlier handoff (2026-04-17 rebase entry). Did not touch it this session. Still ready to drop.
+- Research artifact lives in THREE places now: `~/Dev/Gbrain/docs/research/`, `~/Dev/skippy-brain/memory/projects/MEP/research/`, and the public PR branch. If edited in one place, propagate to the others before they drift.
+- IP priority date is 2026-04-29 (PR #523 timestamp). All three artifact locations carry that date. Do not retroactively edit dates anywhere — drift breaks the priority claim.
+
+---
+
 ## 2026-04-21 — Claude | Claude (Code) | no-op
 **Tag-in:** 2026-04-21 | **Tag-out:** EOL
 
