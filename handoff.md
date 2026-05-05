@@ -2,6 +2,37 @@
 
 Context relay between sessions. Newest first. Read before working, write before signing off.
 
+## 2026-05-04 — Claude | Claude (Code) | cleanup
+**Tag-in:** resumed prior session | **Tag-out:** EOL
+
+### What happened
+- Pierre asked whether the pidgin learning was filed in skippy-brain. Confirmed yes, but discovered a **number collision**: voiceprint learning had already claimed `0011` in commit `59c3a78` (2026-04-28) before the pidgin file was numbered `0011` on 2026-04-30. The pidgin file was orphaned (file existed, INDEX did not reference it).
+- Renumbered pidgin learning `0011 → 0012` cleanly:
+  - File renamed `memory/learnings/0011-emergent-pidgin-mep-handoffs.md` → `0012-emergent-pidgin-mep-handoffs.md`
+  - Frontmatter `number: 11 → 12`, added `paper-candidate` tag
+  - Added INDEX row at line 22
+  - Updated cross-link in `memory/projects/MEP/INDEX.md`
+  - Updated `~/Dev/Gbrain/handoff.md` reference (the prior entry mentioned the old filename)
+- skippy-brain pushed at `6046d2d` on `main`. Gbrain pushed at `ac68b06` on `master`.
+- Fixed Gbrain `master` upstream tracking | was tracking `upstream/master` (garrytan), so plain `git push` was misrouting and getting 403'd. Now tracks `origin/master` (CRMinarian). Single config change, verified with a clean push.
+- Confirmed upstream PR `garrytan/gbrain#523` (the pidgin research filing) is **CLOSED** by upstream | likely declined as out-of-scope. IP priority date (2026-04-29) still stands via the PR timestamp + the commits in CRMinarian fork master + skippy-brain.
+- Two `/create-pr` invocations during the session | reported no-op both times because all session work landed directly on master with no feature branch to PR.
+
+### What's pending
+- [ ] @Pierre / @Skippy: spin `0012-emergent-pidgin-mep-handoffs.md` into a Substack post via `/review` content pipeline | seed material is ready, paper-candidate tagged
+- [ ] @Pierre: decide whether to chase publication on the pidgin paper (ACL/EMNLP/CSCW/FAccT venues) | next concrete step is corpus formalization (Phase 1 of the research program in the artifact)
+- [ ] @Pierre: `gh auth refresh` for `workflow` scope still pending from 2026-04-17 ssh-audit | bit us on 2026-04-29 push, will bite again on any branch carrying upstream's workflow file changes
+- [ ] @Pierre: prior session items still apply (CEO presentation deck for Resco, competitive landscape, Resco CEO meeting prep, `~/aly-fs-weather` decision, `gho_` token revoke from ssh-audit entry)
+- [ ] Stale `HANDOFF_TO_PHONE.md` at Gbrain root still untracked, still flagged for deletion across multiple handoffs | not deleted this session
+
+### Watch out for
+- The pidgin learning is now `0012-...` everywhere it should be: skippy-brain learnings file, INDEX, MEP/INDEX cross-link, Gbrain handoff. Do not revert any of those to `0011-...`.
+- IP priority date for the pidgin observation remains **2026-04-29** (the PR #523 timestamp). Renumbering the local file did not change that. If anyone asks "when was this first filed publicly," the answer is 2026-04-29 via PR #523, regardless of whether the local learning is numbered 0011 or 0012.
+- If Pierre runs `/create-pr` for a session where work was committed straight to master, the slash command will report "nothing to PR" rather than fabricating a no-op. Use a feature branch from the start if a PR is intended.
+- Do NOT re-target the upstream PR. PR #523 is closed by garrytan and the IP timestamp is intact. Re-opening or re-PRing risks the timestamp and signals desperation. The right next move on academic side is direct submission to a real venue, not relitigation of an upstream merge.
+
+---
+
 ## 2026-04-30 — Claude | Claude (Code) | research-capture
 **Tag-in:** continuation from 2026-04-29 office-hours session | **Tag-out:** 10:09 EDT
 
