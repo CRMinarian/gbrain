@@ -13,11 +13,11 @@ Context relay between sessions. Newest first. Read before working, write before 
 - Built **research artifact** at `docs/research/emergent-pidgin-mep.md` — 12-section, 357-line, pre-academic-review working draft covering phenomenon, mechanism, prior art (Lazaridou/Mordatch/FAIR Alice-Bob comparison), MDL framing, enterprise integration parallel, AI safety implications, 5-phase research program, seed lexicon (15 terms), candidate venues (ACL/EMNLP, CSCW, FAccT).
 - Merged research artifact into `master` (commit `d6ea666`).
 - Opened public PR to upstream: **https://github.com/garrytan/gbrain/pull/523** from clean branch `pierre/emergent-pidgin-upstream` (off `upstream/master`, only the new file as diff).
-- Captured into skippy-brain in three places: `memory/projects/MEP/research/emergent-pidgin-mep.md` (full artifact), `memory/learnings/0011-emergent-pidgin-mep-handoffs.md` (blog seed in Skippy voice), `memory/projects/MEP/INDEX.md` (updated with new Research Findings section, IP claim locked with 2026-04-29 priority date). Pushed to `NukaSoft/skippy-brain main` at commit `0d97f7d`.
+- Captured into skippy-brain in three places: `memory/projects/MEP/research/emergent-pidgin-mep.md` (full artifact), `memory/learnings/0012-emergent-pidgin-mep-handoffs.md` (blog seed in Skippy voice), `memory/projects/MEP/INDEX.md` (updated with new Research Findings section, IP claim locked with 2026-04-29 priority date). Pushed to `NukaSoft/skippy-brain main` at commit `0d97f7d`.
 - Verified `openclaw.plugin.json` purpose for Pierre — upstream ClawHub bundle manifest, not currently needed for local stack but harmless to leave alone.
 
 ### What's pending
-- [ ] @Pierre / @Skippy: spin `0011-emergent-pidgin-mep-handoffs.md` into a published Substack post via `/review` content pipeline — material is shaped for direct pickup
+- [ ] @Pierre / @Skippy: spin `0012-emergent-pidgin-mep-handoffs.md` into a published Substack post via `/review` content pipeline — material is shaped for direct pickup
 - [ ] @Pierre: monitor upstream PR #523 for merge / academic feedback
 - [ ] @Skippy (longitudinal): start instrumenting MEP write path to log every handoff with timestamp + session metadata for the proposed 90-day corpus collection (Phase 2 of research program)
 - [ ] @Pierre: `gh auth refresh` for `workflow` scope still pending from 2026-04-17 ssh-audit entry — bit us today on the upstream-targeted push (had to switch origin to SSH temporarily)
